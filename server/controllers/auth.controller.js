@@ -1,5 +1,6 @@
 const User = require("../models/User.model");
 const bcrypt = require("bcryptjs");
+const generateToken = require("../utils/generateToken");
 
 // REGISTER
 const register = async (req, res) => {
@@ -15,13 +16,22 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "Username already taken" });
     }
 
-    // hash the password — 10 is the salt rounds (complexity)
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
       username,
-      password: hashedPassword, // save hashed not plain
+      password: hashedPassword,
       phone,
+    });
+
+    // generate token
+    const token = generateToken(user._id);
+
+    // send token in cookie
+    res.cookie("token", token, {
+      httpOnly: true, // JS in browser can't access it — secure
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+      sameSite: "strict",
     });
 
     res.status(201).json({
@@ -29,6 +39,7 @@ const register = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
+        phone: user.phone,
       },
     });
   } catch (error) {
@@ -41,29 +52,36 @@ const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Step 1 — check fields
     if (!username || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Step 2 — find user in DB
     const user = await User.findOne({ username });
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Step 3 — compare password with hashed one in DB
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Step 4 — success (we add JWT tomorrow)
+    // generate token
+    const token = generateToken(user._id);
+
+    // send token in cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "strict",
+    });
+
     res.status(200).json({
       message: "Login successful",
       user: {
         id: user._id,
         username: user.username,
+        phone: user.phone,
       },
     });
   } catch (error) {

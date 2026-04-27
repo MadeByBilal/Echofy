@@ -1,6 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 dotenv.config(); // loads .env variables.
@@ -15,6 +16,7 @@ app.use(
   }),
 );
 app.use(express.json()); // read json from the request body.
+app.use(cookieParser());
 
 // connect to database
 connectDB();
