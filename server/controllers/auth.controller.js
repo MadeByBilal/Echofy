@@ -89,4 +89,10 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const getMe = async (req, res) => {
+  res.status(200).json({
+    user: req.user // this came from the middleware
+  })
+}
+
+module.exports = { register, login, getMe }
