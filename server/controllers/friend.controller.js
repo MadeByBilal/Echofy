@@ -87,5 +87,34 @@ const getIncomingRequests = async (req, res) => {
   }
 }
 
-module.exports = { sendRequest, respondToRequest , getIncomingRequests}
+const getFriends = async (req, res) => {
+  try {
+    const userId = req.user._id
+
+    // find all accepted requests where I am either sender or receiver
+    const requests = await FriendRequest.find({
+      status: 'accepted',
+      $or: [{ from: userId }, { to: userId }]
+    })
+    .populate('from', 'username phone profilePic isOnline lastSeen')
+    .populate('to', 'username phone profilePic isOnline lastSeen')
+
+    // extract the friend from each request
+    const friends = requests.map(request => {
+      // if I was the sender, friend is the receiver and vice versa
+      if (request.from._id.toString() === userId.toString()) {
+        return request.to
+      } else {
+        return request.from
+      }
+    })
+
+    res.status(200).json({ friends })
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+}
+
+module.exports = { sendRequest, respondToRequest , getIncomingRequests , getFriends}
 
