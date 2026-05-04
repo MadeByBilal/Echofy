@@ -112,7 +112,7 @@ const getFriends = async (req, res) => {
     res.status(200).json({ friends })
 
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message })
+    res.status(500).json({ message: 'Server Error', error: error.message })
   }
 }
 

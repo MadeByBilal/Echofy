@@ -31,7 +31,7 @@ app.get("/", (req, res) => {
 // Routes 
 app.use("/api/auth", authRoutes);
 app.use('/api/users', userRoutes)
-app.use('/api/friends', friendRoutes)
+app.use('/api/friends', friendRoutes) // Done testing completed of this route
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
