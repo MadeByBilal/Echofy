@@ -2,36 +2,48 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const http = require("http");
+const { Server } = require("socket.io");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
-const userRoutes = require('./routes/user.routes')
-const friendRoutes = require('./routes/friend.routes')
-dotenv.config(); // loads .env variables.
+const userRoutes = require("./routes/user.routes");
+const friendRoutes = require("./routes/friend.routes");
+const messageRoutes = require("./routes/message.routes");
+const { initSocket, onlineUsers } = require("./socket/socket");
 
-const app = express();
+dotenv.config();
+
+const app = express()
+const server = http.createServer(app)
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3001",
+    credentials: true
+  }
+})
+
 const PORT = process.env.PORT || 5000;
 
-// middleware
-app.use(
-  cors({
-    origin: "http://localhost:3001", // only allow our specific frontend url
-    credentials: true,
-  }),
-);
-app.use(express.json()); // read json from the request body.
-app.use(cookieParser());
+app.use(cors({
+  origin: "http://localhost:3001",
+  credentials: true,
+}))
+app.use(express.json())
+app.use(cookieParser())
 
-// connect to database
-connectDB();
+connectDB()
 
-// test route
-app.get("/", (req, res) => {
-  res.json({ message: "Server is running" });
-});
-// Routes 
-app.use("/api/auth", authRoutes);
-app.use('/api/users', userRoutes)
-app.use('/api/friends', friendRoutes) // Done testing completed of this route
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.use("/api/auth", authRoutes)
+app.use("/api/users", userRoutes)
+app.use("/api/friends", friendRoutes)
+app.use("/api/messages", messageRoutes)
+
+// init socket
+initSocket(io)
+
+app.set('io', io)
+app.set('onlineUsers', onlineUsers)
+
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+})
