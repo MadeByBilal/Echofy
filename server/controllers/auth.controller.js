@@ -88,11 +88,16 @@ const login = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
+// INFO OF THE CURRENT USER LOGIN
 const getMe = async (req, res) => {
   res.status(200).json({
     user: req.user // this came from the middleware
   })
 }
+// LOGOUT THE USER
+const logout = async (req, res) => {
+  res.clearCookie('token')
+  res.status(200).json({ message: 'Logged out successfully' })
+}
 
-module.exports = { register, login, getMe }
+module.exports = { register, login, logout ,getMe }
