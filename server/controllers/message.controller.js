@@ -19,6 +19,23 @@ const sendMessage = async (req, res) => {
       replyTo: replyTo || null   // if no replyTo, set null
     })
 
+
+    // get socket stuff from app
+    const io = req.app.get('io')
+    const onlineUsers = req.app.get('onlineUsers')
+
+    //check if receiver is online
+    const receiverSocketId = onlineUsers[receiverId]
+
+    if (receiverSocketId) {
+      // receiver is online — push message instantly
+      io.to(receiverSocketId).emit('receive_message', message)
+
+      // update status to delivered
+      message.status = 'delivered'
+      await message.save()
+    }
+
     res.status(201).json({ message })
 
   } catch (error) {
