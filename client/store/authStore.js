@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import axiosInstance from '../lib/axios'
+import axiosInstance from '@/lib/axiosInstance'
 
 const useAuthStore = create((set) => ({
   user: null,          // current logged in user
