@@ -1,4 +1,4 @@
-// app/auth/sign-in/page.jsx
+
 'use client'
 
 import React, { useState } from 'react'
@@ -231,7 +231,7 @@ export default function SignInPage() {
 
           <p className="create-account-text animate-element animate-delay-900">
             Don&apos;t have an account?{' '}
-            <Link href="/auth/register" className="create-account-link">
+            <Link href="/register" className="create-account-link">
               Register
             </Link>
           </p>
