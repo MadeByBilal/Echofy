@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axiosInstance from '../../lib/axiosInstance'
 import Image from 'next/image'
 import './friends.css'
@@ -13,6 +13,23 @@ export default function FriendsPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [requestSent, setRequestSent] = useState(false)
+  const [incomingRequests, setIncomingRequests] = useState([])
+
+ 
+  async function fetchIncomingRequests() {
+    try {
+      const res = await axiosInstance.get('/friends/requests')
+      setIncomingRequests(res.data.requests)
+    } catch (err) {
+      console.log('Error fetching requests:', err)
+    }
+  }
+
+   // load incoming requests on page load
+  useEffect(() => {
+    fetchIncomingRequests()
+  }, [])
+
 
   const handleSearch = async () => {
     if (!phone) return
@@ -48,11 +65,22 @@ export default function FriendsPage() {
     }
   }
 
+  const handleRespond = async (requestId, action) => {
+    try {
+      await axiosInstance.patch('/friends/respond', { requestId, action })
+      // remove from list after responding
+      setIncomingRequests(prev => prev.filter(r => r._id !== requestId))
+      setSuccess(action === 'accepted' ? 'Friend added!' : 'Request rejected')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Something went wrong')
+    }
+  }
+
   return (
     <div className="friends-page">
       <div className="friends-container">
 
-        <h1 className="friends-title">Find Friends</h1>
+        <h1 className="friends-title">Friends</h1>
 
         {/* SEARCH */}
         <div className="search-box">
@@ -105,6 +133,49 @@ export default function FriendsPage() {
                 {requestSent ? 'Request Sent' : isSending ? 'Sending...' : 'Add Friend'}
               </button>
             </div>
+          </>
+        )}
+
+        {/* INCOMING REQUESTS */}
+        {incomingRequests.length > 0 && (
+          <>
+            <p className="section-title">
+              Friend Requests ({incomingRequests.length})
+            </p>
+            {incomingRequests.map((request) => (
+              <div key={request._id} className="user-card">
+                <div className="user-info">
+                  <div className="user-avatar">
+                    {request.from.profilePic ? (
+                      <Image src={request.from.profilePic} alt="avatar" />
+                    ) : (
+                      request.from.username[0].toUpperCase()
+                    )}
+                  </div>
+                  <div>
+                    <p className="user-name">
+                      {request.from.name || request.from.username}
+                    </p>
+                    <p className="user-phone">{request.from.phone}</p>
+                  </div>
+                </div>
+
+                <div className="request-actions">
+                  <button
+                    className="accept-btn"
+                    onClick={() => handleRespond(request._id, 'accepted')}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    className="reject-btn"
+                    onClick={() => handleRespond(request._id, 'rejected')}
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))}
           </>
         )}
 
