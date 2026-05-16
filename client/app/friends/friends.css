@@ -1,0 +1,193 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.friends-page {
+  min-height: 100vh;
+  background-color: #0f0f0f;
+  font-family: sans-serif;
+  padding: 40px 24px;
+}
+
+.friends-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.friends-title {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: fadeSlideIn 0.5s ease 0.1s forwards;
+}
+
+/* SEARCH */
+.search-box {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: fadeSlideIn 0.5s ease 0.2s forwards;
+}
+
+.search-input {
+  flex: 1;
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 13px 16px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.search-input:focus {
+  border-color: #7c3aed;
+}
+
+.search-input::placeholder {
+  color: #444;
+}
+
+.search-btn {
+  background-color: #7c3aed;
+  color: white;
+  padding: 13px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.search-btn:hover {
+  background-color: #6d28d9;
+}
+
+.search-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* USER CARD */
+.user-card {
+  background-color: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  opacity: 0;
+  animation: fadeSlideIn 0.5s ease 0.3s forwards;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.user-avatar img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-name {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.user-phone {
+  color: #888;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.add-friend-btn {
+  background-color: #7c3aed;
+  color: white;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.add-friend-btn:hover {
+  background-color: #6d28d9;
+}
+
+.add-friend-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-friend-btn.sent {
+  background-color: #252525;
+  color: #888;
+  cursor: default;
+}
+
+/* ERROR / SUCCESS */
+.error-msg {
+  color: #f87171;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.success-msg {
+  color: #4ade80;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* SECTION TITLE */
+.section-title {
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  margin-top: 32px;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+    filter: blur(0px);
+  }
+}
