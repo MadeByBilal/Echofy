@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import axiosInstance from '../lib/axios'
+import axiosInstance from '../../lib/axiosInstance'
 import Image from 'next/image'
 import './setup.css'
 
