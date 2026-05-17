@@ -191,3 +191,91 @@
     filter: blur(0px);
   }
 }
+.request-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.accept-btn {
+  background-color: #7c3aed;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.accept-btn:hover {
+  background-color: #6d28d9;
+}
+
+.reject-btn {
+  background-color: transparent;
+  color: #888;
+  padding: 8px 16px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reject-btn:hover {
+  border-color: #f87171;
+  color: #f87171;
+}
+
+
+.user-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.online {
+  background-color: #4ade80;
+}
+
+.status-dot.offline {
+  background-color: #555;
+}
+
+.status-text {
+  color: #888;
+  font-size: 12px;
+}
+
+.message-btn {
+  background-color: transparent;
+  color: #7c3aed;
+  padding: 8px 18px;
+  border: 1px solid #7c3aed;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.message-btn:hover {
+  background-color: #7c3aed;
+  color: white;
+}
+
+.empty-msg {
+  color: #555;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 48px;
+}
