@@ -13,37 +13,39 @@ const { initSocket, onlineUsers } = require("./socket/socket");
 
 dotenv.config();
 
-const app = express()
-const server = http.createServer(app)
+const app = express();
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:3001",
-    credentials: true
-  }
-})
+    credentials: true,
+  },
+});
 
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-  origin: "http://localhost:3001",
-  credentials: true,
-}))
-app.use(express.json())
-app.use(cookieParser())
+app.use(
+  cors({
+    origin: "http://localhost:3001",
+    credentials: true,
+  }),
+);
+app.use(express.json());
+app.use(cookieParser());
 
-connectDB()
+connectDB();
 
-app.use("/api/auth", authRoutes)
-app.use("/api/users", userRoutes)
-app.use("/api/friends", friendRoutes)
-app.use("/api/messages", messageRoutes)
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/friends", friendRoutes);
+app.use("/api/messages", messageRoutes);
 
 // init socket
-initSocket(io)
+initSocket(io);
 
-app.set('io', io)
-app.set('onlineUsers', onlineUsers)
+app.set("io", io);
+app.set("onlineUsers", onlineUsers);
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
+  console.log(`Server running on port ${PORT}`);
+});

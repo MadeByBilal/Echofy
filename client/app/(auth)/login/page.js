@@ -1,79 +1,78 @@
+"use client";
 
-'use client'
-
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import Image from 'next/image'
-import useAuthStore from '@/store/authStore'
-import './login.css'
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import useAuthStore from "@/store/authStore";
+import "./login.css";
 
 const testimonials = [
   {
-    avatarSrc: 'https://randomuser.me/api/portraits/women/57.jpg',
-    name: 'Sarah Chen',
-    handle: '@sarahdigital',
-    text: 'Amazing platform! The user experience is seamless and the features are exactly what I needed.',
+    avatarSrc: "https://randomuser.me/api/portraits/women/57.jpg",
+    name: "Sarah Chen",
+    handle: "@sarahdigital",
+    text: "Amazing platform! The user experience is seamless and the features are exactly what I needed.",
   },
   {
-    avatarSrc: 'https://randomuser.me/api/portraits/men/64.jpg',
-    name: 'Marcus Johnson',
-    handle: '@marcustech',
-    text: 'This service has transformed how I work. Clean design, powerful features, and excellent support.',
+    avatarSrc: "https://randomuser.me/api/portraits/men/64.jpg",
+    name: "Marcus Johnson",
+    handle: "@marcustech",
+    text: "This service has transformed how I work. Clean design, powerful features, and excellent support.",
   },
   {
-    avatarSrc: 'https://randomuser.me/api/portraits/men/32.jpg',
-    name: 'David Martinez',
-    handle: '@davidcreates',
+    avatarSrc: "https://randomuser.me/api/portraits/men/32.jpg",
+    name: "David Martinez",
+    handle: "@davidcreates",
     text: "I've tried many platforms, but this one stands out. Intuitive, reliable, and genuinely helpful for productivity.",
   },
-]
+];
 
 export default function SignInPage() {
-  const router = useRouter()
-  const { login, isLoading } = useAuthStore()
+  const router = useRouter();
+  const { login, isLoading } = useAuthStore();
 
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
+    username: "",
+    password: "",
     rememberMe: false,
-  })
-  const [error, setError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  });
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
-  }
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-   
+    e.preventDefault();
+    setError("");
+
     try {
-      
-      await login({ username: formData.username, password: formData.password })
-  
-      router.push('/chat')
+      await login({ username: formData.username, password: formData.password });
+
+      router.push("/chat");
     } catch (err) {
-      
-      setError(err.response?.data?.message || err.message || 'Something went wrong')
+      setError(
+        err.response?.data?.message || err.message || "Something went wrong",
+      );
     }
-  }
+  };
 
   const handleGoogleSignIn = () => {
     // TODO: integrate your OAuth provider
-    console.log('Google sign-in')
-  }
+    console.log("Google sign-in");
+  };
 
   const handleResetPassword = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     // TODO: navigate to reset password page or open modal
-    console.log('Reset password')
-  }
+    console.log("Reset password");
+  };
 
   return (
     <div className="signin-container">
@@ -119,7 +118,7 @@ export default function SignInPage() {
                 <input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
@@ -175,11 +174,7 @@ export default function SignInPage() {
                 />
                 <span>Keep me signed in</span>
               </label>
-              <a
-                href="#"
-                className="reset-link"
-                onClick={handleResetPassword}
-              >
+              <a href="#" className="reset-link" onClick={handleResetPassword}>
                 Reset password
               </a>
             </div>
@@ -189,7 +184,7 @@ export default function SignInPage() {
               className="btn-primary animate-element animate-delay-600"
               disabled={isLoading}
             >
-              {isLoading ? 'Logging in...' : 'Sign In'}
+              {isLoading ? "Logging in..." : "Sign In"}
             </button>
           </form>
 
@@ -230,7 +225,7 @@ export default function SignInPage() {
           </button>
 
           <p className="create-account-text animate-element animate-delay-900">
-            Don&apos;t have an account?{' '}
+            Don&apos;t have an account?{" "}
             <Link href="/register" className="create-account-link">
               Register
             </Link>
@@ -244,7 +239,7 @@ export default function SignInPage() {
           className="hero-image animate-slide-right animate-delay-300"
           style={{
             backgroundImage:
-              'url(https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80)',
+              "url(https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80)",
           }}
           role="img"
           aria-label="Decorative hero background"
@@ -253,8 +248,8 @@ export default function SignInPage() {
         {testimonials.length > 0 && (
           <div className="testimonials-strip">
             {testimonials.map((testimonial, index) => {
-              const cardClass = `testimonial-card testimonial-card-${index + 1}`
-              const delayClass = `animate-delay-${1000 + index * 200}`
+              const cardClass = `testimonial-card testimonial-card-${index + 1}`;
+              const delayClass = `animate-delay-${1000 + index * 200}`;
               return (
                 <div
                   key={index}
@@ -266,7 +261,6 @@ export default function SignInPage() {
                     width={10}
                     height={10}
                     alt="avatar"
-     
                     loading="lazy"
                   />
                   <div className="testimonial-content">
@@ -275,11 +269,11 @@ export default function SignInPage() {
                     <p className="testimonial-text">{testimonial.text}</p>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         )}
       </section>
     </div>
-  )
+  );
 }
