@@ -1,55 +1,68 @@
-import { create } from 'zustand'
-import axiosInstance from '@/lib/axiosInstance'
+import { create } from "zustand";
+import axiosInstance from "@/lib/axiosInstance";
+import socket from "@/lib/socket";
 
 const useAuthStore = create((set) => ({
-  user: null,          // current logged in user
-  isLoading: false,    // for loading states
+  user: null,
+  isLoading: false,
 
-  // register
   register: async (data) => {
-    set({ isLoading: true })
+    set({ isLoading: true });
     try {
-      const res = await axiosInstance.post('/auth/register', data)
-      set({ user: res.data.user, isLoading: false })
+      const res = await axiosInstance.post("/auth/register", data);
+      set({ user: res.data.user, isLoading: false });
     } catch (error) {
-      set({ isLoading: false })
-      throw error
+      set({ isLoading: false });
+      throw error;
     }
   },
 
-  // login
   login: async (data) => {
-    set({ isLoading: true })
+    set({ isLoading: true });
     try {
-      const res = await axiosInstance.post('/auth/login', data)
-      set({ user: res.data.user, isLoading: false })
+      const res = await axiosInstance.post("/auth/login", data);
+      const user = res.data.user;
+
+      // connect socket immediately after login
+      socket.connect();
+      socket.emit("user_online", user._id);
+
+      set({ user, isLoading: false });
     } catch (error) {
-      set({ isLoading: false })
-      throw error
+      set({ isLoading: false });
+      throw error;
     }
   },
 
-  // get current user — called on page refresh
   getMe: async () => {
     try {
-      const res = await axiosInstance.get('/auth/me')
-      set({ user: res.data.user })
+      const res = await axiosInstance.get("/auth/me");
+      const user = res.data.user;
+
+      // reconnect socket on page refresh
+      if (!socket.connected) {
+        socket.connect();
+        socket.emit("user_online", user._id);
+      }
+
+      set({ user });
     } catch (error) {
-      set({ user: null })
-      console.log("error message", error)
+      set({ user: null });
+      console.log(error);
     }
   },
 
-  // logout
   logout: async () => {
     try {
-      await axiosInstance.post('/auth/logout')
-      set({ user: null })
+      await axiosInstance.post("/auth/logout");
+      socket.disconnect();
+      set({ user: null });
     } catch (error) {
-      set({ user: null })
-        console.log("error message", error)
+      socket.disconnect();
+      set({ user: null });
+      console.log(error);
     }
-  }
-}))
+  },
+}));
 
-export default useAuthStore
+export default useAuthStore;

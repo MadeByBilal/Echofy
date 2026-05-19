@@ -1,112 +1,184 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
 import useAuthStore from "@/store/authStore";
-import useMessages from "@/hooks/useMessages";
-import useSocket from "@/hooks/useSocket";
-import ChatWindow from "@/components/chat/ChatWindow";
+import socket from "@/lib/socket";
+import Image from "next/image";
+import "../chat.css";
 
-export default function ChatConversationPage({ params }) {
-  const { userId } = params;
+export default function ChatWindow() {
+  const { userId } = useParams();
   const router = useRouter();
-  const { user, getMe } = useAuthStore();
+  const { user } = useAuthStore();
+
+  const [messages, setMessages] = useState([]);
   const [friend, setFriend] = useState(null);
-  const [loadingFriend, setLoadingFriend] = useState(true);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [pageError, setPageError] = useState("");
+  const [text, setText] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
 
-  const {
-    messages,
-    loading: messagesLoading,
-    error: messagesError,
-    sendMessage,
-    setMessages,
-    refresh,
-  } = useMessages(userId);
+  const bottomRef = useRef(null);
 
-  useSocket(
-    useCallback(
-      (message) => {
-        if (!message) return;
-        if (message.senderId === userId || message.receiverId === userId) {
-          setMessages((prev) => [...prev, message]);
-        }
-      },
-      [setMessages, userId],
-    ),
-  );
-
-  useEffect(() => {
-    const loadAuthAndFriend = async () => {
-      setPageError("");
-      try {
-        await getMe();
-        const res = await axiosInstance.get("/friends");
-        const friendRecord = (res.data.friends || []).find(
-          (friendItem) => friendItem._id === userId,
-        );
-        setFriend(friendRecord || null);
-      } catch (err) {
-        setPageError(
-          err.response?.data?.message || "Unable to load chat history.",
-        );
-      } finally {
-        setLoadingFriend(false);
-        setAuthChecked(true);
-      }
-    };
-
-    loadAuthAndFriend();
-  }, [getMe, userId]);
-
-  useEffect(() => {
-    if (authChecked && !user) {
-      router.push("/login");
-    }
-  }, [authChecked, user, router]);
-
-  const handleSend = async (text) => {
-    const result = await sendMessage(text);
-    if (result) {
-      setMessages((prev) => [...prev, result]);
+  const fetchFriend = async () => {
+    try {
+      const res = await axiosInstance.get("/friends");
+      const found = res.data.friends.find((f) => f._id === userId);
+      setFriend(found);
+    } catch (err) {
+      console.log("Error fetching friend:", err);
     }
   };
 
+  const fetchMessages = async () => {
+    try {
+      const res = await axiosInstance.get(`/messages/${userId}`);
+      setMessages(res.data.messages);
+    } catch (err) {
+      console.log("Error fetching messages:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchFriend();
+      fetchMessages();
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    socket.on("receive_message", (message) => {
+      if (message.senderId === userId || message.senderId?._id === userId) {
+        setMessages((prev) => [...prev, message]);
+      }
+    });
+
+    return () => {
+      socket.off("receive_message");
+    };
+  }, [userId]);
+
+  const handleSend = async () => {
+    if (!text.trim() || isSending) return;
+    setIsSending(true);
+
+    try {
+      const res = await axiosInstance.post("/messages/send", {
+        receiverId: userId,
+        text: text.trim(),
+      });
+      // add to messages immediately
+      setMessages((prev) => [...prev, res.data.message]);
+      setText("");
+    } catch (err) {
+      console.log("Error sending message:", err);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const formatTime = (date) => {
+    return new Date(date).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-5xl rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-2xl shadow-slate-950/40">
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="chat-page">
+      <div className="chat-window">
+        {/* HEADER */}
+        <div className="chat-window-header">
+          <button className="back-btn" onClick={() => router.push("/chat")}>
+            ←
+          </button>
+
+          <div className="chat-avatar">
+            <div className="avatar-circle">
+              {friend?.profilePic ? (
+                <Image src={friend.profilePic} alt="avatar" />
+              ) : (
+                friend?.username?.[0]?.toUpperCase() || "?"
+              )}
+            </div>
+            <span
+              className={`status-dot ${friend?.isOnline ? "online" : "offline"}`}
+            />
+          </div>
+
           <div>
-            <h1 className="text-3xl font-semibold">Chat</h1>
-            <p className="mt-2 text-slate-400">
-              Send messages and see live updates from your friend.
+            <p className="header-name">
+              {friend?.name || friend?.username || "Loading..."}
+            </p>
+            <p className="header-status">
+              {friend?.isOnline ? "Online" : "Offline"}
             </p>
           </div>
-          <Link
-            href="/chat"
-            className="rounded-full bg-slate-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-600"
-          >
-            Back to chat list
-          </Link>
         </div>
 
-        {pageError ? (
-          <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-6 text-red-200">
-            {pageError}
-          </div>
-        ) : (
-          <ChatWindow
-            friend={friend}
-            messages={messages}
-            loading={messagesLoading || loadingFriend}
-            error={messagesError}
-            onSend={handleSend}
-            myId={user?.id}
+        {/* MESSAGES */}
+        <div className="messages-area">
+          {isLoading && <p className="messages-loading">Loading messages...</p>}
+
+          {!isLoading && messages.length === 0 && (
+            <p className="messages-loading">No messages yet. Say hi! 👋</p>
+          )}
+
+          {messages.map((msg) => {
+            const isSent =
+              msg.senderId === user?._id || msg.senderId?._id === user?._id;
+            return (
+              <div
+                key={msg._id}
+                className={`message-wrapper ${isSent ? "sent" : "received"}`}
+              >
+                <div
+                  className={`message-bubble ${isSent ? "sent" : "received"}`}
+                >
+                  {msg.text}
+                  <div className="message-time">
+                    {formatTime(msg.createdAt)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          <div ref={bottomRef} />
+        </div>
+
+        {/* INPUT */}
+        <div className="chat-input-area">
+          <textarea
+            className="chat-input"
+            placeholder="Type a message..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            rows={1}
           />
-        )}
+          <button
+            className="send-btn"
+            onClick={handleSend}
+            disabled={isSending || !text.trim()}
+          >
+            ➤
+          </button>
+        </div>
       </div>
     </div>
   );

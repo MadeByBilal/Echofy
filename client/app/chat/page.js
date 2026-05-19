@@ -1,73 +1,87 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
-import useAuthStore from "@/store/authStore";
-import ChatList from "@/components/chat/ChatList";
+import Image from "next/image";
 import "./chat.css";
 
 export default function ChatPage() {
+  const router = useRouter();
   const [friends, setFriends] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const { getMe } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setError("");
+    fetchFriends();
+  }, []);
 
-      try {
-        await getMe();
-        const res = await axiosInstance.get("/friends");
-        setFriends(res.data.friends || []);
-      } catch (err) {
-        setError(err.response?.data?.message || "Unable to load chat list.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchFriends = async () => {
+    try {
+      const res = await axiosInstance.get("/friends");
+      setFriends(res.data.friends);
+    } catch (err) {
+      console.log("Error fetching friends:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    load();
-  }, [getMe]);
+  const openChat = (friendId) => {
+    router.push(`/chat/${friendId}`);
+  };
 
   return (
     <div className="chat-page">
-      <div className="chat-page-container">
-        <div className="chat-panel">
-          <div className="chat-header">
-            <div>
-              <h1 className="chat-title">Chats</h1>
-              <p className="chat-subtitle">
-                Open a conversation with a friend or go add contacts.
-              </p>
-            </div>
-            <Link href="/friends" className="button button-secondary">
-              Manage friends
-            </Link>
-          </div>
+      {/* SIDEBAR */}
+      <div className="chat-sidebar">
+        <div className="sidebar-header">
+          <h1 className="sidebar-title">Messages</h1>
+        </div>
 
-          {loading ? (
-            <div className="chat-info-box">Loading your chats...</div>
-          ) : error ? (
-            <div className="chat-error-box">{error}</div>
-          ) : friends.length > 0 ? (
-            <ChatList friends={friends} />
-          ) : (
-            <div className="chat-empty-state">
-              <p>No conversations yet.</p>
-              <p>Add friends first, then start a chat from the Friends page.</p>
-              <Link
-                href="/friends"
-                className="button button-primary"
-                style={{ marginTop: "18px" }}
-              >
-                Find friends
-              </Link>
-            </div>
+        <div className="chat-list">
+          {isLoading && <p className="empty-state">Loading...</p>}
+
+          {!isLoading && friends.length === 0 && (
+            <p className="empty-state">
+              No friends yet. Go to Friends page to add some.
+            </p>
           )}
+
+          {friends.map((friend) => (
+            <div
+              key={friend._id}
+              className="chat-item"
+              onClick={() => openChat(friend._id)}
+            >
+              <div className="chat-avatar">
+                <div className="avatar-circle">
+                  {friend.profilePic ? (
+                    <Image src={friend.profilePic} alt="avatar" />
+                  ) : (
+                    friend.username[0].toUpperCase()
+                  )}
+                </div>
+                <span
+                  className={`status-dot ${friend.isOnline ? "online" : "offline"}`}
+                />
+              </div>
+
+              <div className="chat-info">
+                <p className="chat-name">{friend.name || friend.username}</p>
+                <p className="chat-status">
+                  {friend.isOnline ? "Online" : "Offline"}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* MAIN AREA - desktop only */}
+      <div className="chat-main">
+        <div className="chat-placeholder">
+          <h2>Welcome to Echofy</h2>
+          <p>Select a friend to start chatting</p>
         </div>
       </div>
     </div>
