@@ -141,6 +141,7 @@ export default function ChatWindow() {
           {messages.map((msg) => {
             const isSent =
               msg.senderId === user?._id || msg.senderId?._id === user?._id;
+
             return (
               <div
                 key={msg._id}
@@ -150,8 +151,17 @@ export default function ChatWindow() {
                   className={`message-bubble ${isSent ? "sent" : "received"}`}
                 >
                   {msg.text}
-                  <div className="message-time">
-                    {formatTime(msg.createdAt)}
+                  <div className="message-footer">
+                    <span className="message-time">
+                      {formatTime(msg.createdAt)}
+                    </span>
+                    {isSent && (
+                      <span className={`message-ticks ${msg.status}`}>
+                        {msg.status === "sent" && "✓"}
+                        {msg.status === "delivered" && "✓✓"}
+                        {msg.status === "seen" && "✓✓"}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
