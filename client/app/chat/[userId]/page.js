@@ -21,49 +21,83 @@ export default function ChatWindow() {
 
   const bottomRef = useRef(null);
 
-  const fetchFriend = async () => {
-    try {
-      const res = await axiosInstance.get("/friends");
-      const found = res.data.friends.find((f) => f._id === userId);
-      setFriend(found);
-    } catch (err) {
-      console.log("Error fetching friend:", err);
-    }
-  };
-
-  const fetchMessages = async () => {
-    try {
-      const res = await axiosInstance.get(`/messages/${userId}`);
-      setMessages(res.data.messages);
-    } catch (err) {
-      console.log("Error fetching messages:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchFriend = async () => {
+      try {
+        const res = await axiosInstance.get("/friends");
+        const found = res.data.friends.find((f) => f._id === userId);
+        setFriend(found);
+      } catch (err) {
+        console.log("Error fetching friend:", err);
+      }
+    };
+
+    const fetchMessages = async () => {
+      try {
+        const res = await axiosInstance.get(`/messages/${userId}`);
+        setMessages(res.data.messages);
+
+        // Emit messages_seen event
+        if (user?._id) {
+          socket.emit("messages_seen", {
+            senderId: userId,
+            receiverId: user._id,
+          });
+        }
+      } catch (err) {
+        console.log("Error fetching messages:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     if (userId) {
       fetchFriend();
       fetchMessages();
     }
-  }, [userId]);
+  }, [userId, user?._id]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
+    // Tell server this user is online
+    if (user?._id) {
+      socket.emit("user_online", user._id);
+    }
+
+    // Listen for incoming messages
     socket.on("receive_message", (message) => {
-      if (message.senderId === userId || message.senderId?._id === userId) {
-        setMessages((prev) => [...prev, message]);
-      }
+      setMessages((prev) => [...prev, message]);
+    });
+
+    // Listen for delivery confirmation
+    socket.on("messages_delivered", ({ receiverId, messageIds }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          messageIds && messageIds.includes(msg._id)
+            ? { ...msg, status: "delivered" }
+            : msg,
+        ),
+      );
+    });
+
+    // Listen for seen confirmation
+    socket.on("messages_seen", ({ senderId, receiverId }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.senderId === senderId ? { ...msg, status: "seen" } : msg,
+        ),
+      );
     });
 
     return () => {
       socket.off("receive_message");
+      socket.off("messages_delivered");
+      socket.off("messages_seen");
     };
-  }, [userId]);
+  }, [user?._id]);
 
   const handleSend = async () => {
     if (!text.trim() || isSending) return;
