@@ -1,18 +1,40 @@
 "use client";
 
-export default function ChatBubble({ message, isMe, timestamp }) {
-  const timeLabel = timestamp
-    ? new Date(timestamp).toLocaleTimeString([], {
+export default function ChatBubble({ message, isMe, onReply }) {
+  const timeLabel = message.createdAt
+    ? new Date(message.createdAt).toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       })
     : "";
 
   return (
-    <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[85%] rounded-3xl px-5 py-4 text-sm leading-6 ${isMe ? "rounded-br-none bg-blue-500 text-white" : "rounded-bl-none bg-slate-800 text-slate-100"}`}>
-        <p>{message}</p>
-        {timeLabel && <span className="mt-2 block text-right text-[11px] text-slate-400">{timeLabel}</span>}
+    <div className={`message-wrapper ${isMe ? "sent" : "received"}`}>
+      <div
+        className={`message-bubble ${isMe ? "sent" : "received"}`}
+        onClick={() => onReply?.(message)}
+      >
+        {message.replyTo?.text && (
+          <div className="reply-preview">
+            <span className="reply-label">Replying to</span>
+            <p>{message.replyTo.text}</p>
+          </div>
+        )}
+
+        <p>{message.text}</p>
+
+        <div className="message-footer">
+          <span className="message-time">{timeLabel}</span>
+          {isMe && (
+            <span className={`message-ticks ${message.status}`}>
+              {message.status === "seen"
+                ? "✓✓"
+                : message.status === "delivered"
+                ? "✓✓"
+                : "✓"}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

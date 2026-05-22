@@ -1,38 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import ReplyPreview from "./ReplyPreview";
 
-export default function ChatInput({ onSend, disabled }) {
-  const [text, setText] = useState("");
-
-  const handleSend = async () => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    const result = await onSend(trimmed);
-    if (result !== false) {
-      setText("");
-    }
-  };
-
+export default function ChatInput({
+  text,
+  onTextChange,
+  onSend,
+  onKeyDown,
+  disabled,
+  replyTo,
+  replyAuthor,
+  onCancelReply,
+}) {
   return (
-    <div className="rounded-3xl border border-slate-800 bg-slate-950/80 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <input
-          type="text"
+    <div>
+      {replyTo && (
+        <ReplyPreview
+          replyAuthor={replyAuthor}
+          text={replyTo.text}
+          onCancel={onCancelReply}
+        />
+      )}
+
+      <div className="chat-input-area">
+        <textarea
+          className="chat-input"
+          placeholder="Type a message..."
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Type your message..."
-          className="w-full rounded-3xl border border-slate-800 bg-slate-900 px-4 py-3 text-slate-100 outline-none transition focus:border-blue-500"
+          onChange={(e) => onTextChange(e.target.value)}
+          onKeyDown={onKeyDown}
+          rows={1}
           disabled={disabled}
         />
         <button
-          type="button"
-          onClick={handleSend}
-          disabled={disabled}
-          className="inline-flex shrink-0 items-center justify-center rounded-3xl bg-blue-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="send-btn"
+          onClick={onSend}
+          disabled={disabled || !text.trim()}
         >
-          Send
+          ➤
         </button>
       </div>
     </div>

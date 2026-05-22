@@ -1,52 +1,99 @@
 "use client";
 
+import Image from "next/image";
 import ChatBubble from "./ChatBubble";
 import ChatInput from "./ChatInput";
 
-export default function ChatWindow({ friend, messages, loading, error, onSend, myId }) {
+export default function ChatWindow({
+  friend,
+  user,
+  messages,
+  isLoading,
+  text,
+  replyTo,
+  isSending,
+  bottomRef,
+  onTextChange,
+  onSend,
+  onKeyDown,
+  onReply,
+  onCancelReply,
+  onBack,
+}) {
+  const friendDisplayName = friend?.name || friend?.username || "Loading...";
+  const isOwnMessage = (senderId) =>
+    senderId === user?._id || senderId?._id === user?._id;
+
+  const replyAuthor =
+    replyTo &&
+    (isOwnMessage(replyTo.senderId)
+      ? "You"
+      : friend?.name || friend?.username || "them");
+
   return (
-    <div className="flex min-h-[70vh] flex-col gap-5">
-      <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-5">
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-blue-600 text-2xl font-semibold text-white">
-            {friend?.profilePic ? friend.profilePic[0] : (friend?.name || friend?.username || "?")[0].toUpperCase()}
+    <div className="chat-page">
+      <div className="chat-window">
+        <div className="chat-window-header">
+          <button className="back-btn" onClick={onBack}>
+            ←
+          </button>
+
+          <div className="chat-avatar">
+            <div className="avatar-circle">
+              {friend?.profilePic ? (
+                <Image
+                  src={friend.profilePic}
+                  alt="avatar"
+                  width={40}
+                  height={40}
+                />
+              ) : (
+                friend?.username?.[0]?.toUpperCase() || "?"
+              )}
+            </div>
+            <span
+              className={`status-dot ${friend?.isOnline ? "online" : "offline"}`}
+            />
           </div>
+
           <div>
-            <p className="text-xl font-semibold text-slate-100">
-              {friend?.name || friend?.username || "Chat"}
-            </p>
-            <p className="text-sm text-slate-400">
-              {friend?.isOnline ? "Online now" : "Offline"}
+            <p className="header-name">{friendDisplayName}</p>
+            <p className="header-status">
+              {friend?.isOnline ? "Online" : "Offline"}
             </p>
           </div>
         </div>
-      </div>
 
-      <div className="flex-1 overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/80">
-        {loading ? (
-          <div className="flex min-h-[320px] items-center justify-center p-8 text-slate-400">Loading conversation...</div>
-        ) : error ? (
-          <div className="p-8 text-red-300">{error}</div>
-        ) : messages.length === 0 ? (
-          <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 p-8 text-slate-400">
-            <p className="text-lg">No messages yet.</p>
-            <p className="text-sm">Send the first message to start the conversation.</p>
-          </div>
-        ) : (
-          <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto p-5">
-            {messages.map((message) => (
-              <ChatBubble
-                key={message._id || `${message.senderId}-${message.createdAt}-${message.text}`}
-                message={message.text}
-                isMe={message.senderId === myId}
-                timestamp={message.createdAt}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+        <div className="messages-area">
+          {isLoading && <p className="messages-loading">Loading messages...</p>}
 
-      <ChatInput onSend={onSend} disabled={loading} />
+          {!isLoading && messages.length === 0 && (
+            <p className="messages-loading">No messages yet. Say hi! 👋</p>
+          )}
+
+          {messages.map((msg) => (
+            <ChatBubble
+              key={msg._id}
+              message={msg}
+              isMe={isOwnMessage(msg.senderId)}
+              onReply={onReply}
+            />
+          ))}
+
+          <div ref={bottomRef} />
+        </div>
+
+        <ChatInput
+          text={text}
+          onTextChange={onTextChange}
+          onSend={onSend}
+          onKeyDown={onKeyDown}
+          disabled={isSending}
+          replyTo={replyTo}
+          replyAuthor={replyAuthor}
+          onCancelReply={onCancelReply}
+        />
+      </div>
     </div>
   );
 }

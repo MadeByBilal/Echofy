@@ -14,14 +14,16 @@ const sendMessage = async (req, res) => {
     }
 
     // save message to DB
-    const message = await Message.create({
+    let message = await Message.create({
       senderId,
       receiverId,
       text,
       replyTo: replyTo || null, // if no replyTo, set null
     });
 
-    // get socket stuff from ap
+    message = await message.populate("replyTo", "text senderId");
+
+    // get socket stuff from app
     const io = req.app.get("io");
     const onlineUsers = req.app.get("onlineUsers");
 

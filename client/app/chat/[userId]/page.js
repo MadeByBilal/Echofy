@@ -5,10 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
 import useAuthStore from "@/store/authStore";
 import socket from "@/lib/socket";
-import Image from "next/image";
+import ChatWindow from "@/components/chat/ChatWindow";
 import "../chat.css";
 
-export default function ChatWindow() {
+export default function ChatPage() {
   const { userId } = useParams();
   const router = useRouter();
   const { user } = useAuthStore();
@@ -18,6 +18,7 @@ export default function ChatWindow() {
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
 
   const bottomRef = useRef(null);
 
@@ -25,8 +26,7 @@ export default function ChatWindow() {
     const fetchFriend = async () => {
       try {
         const res = await axiosInstance.get("/friends");
-        const found = res.data.friends.find((f) => f._id === userId);
-        setFriend(found);
+        setFriend(res.data.friends.find((f) => f._id === userId));
       } catch (err) {
         console.log("Error fetching friend:", err);
       }
@@ -35,9 +35,8 @@ export default function ChatWindow() {
     const fetchMessages = async () => {
       try {
         const res = await axiosInstance.get(`/messages/${userId}`);
-        setMessages(res.data.messages);
+        setMessages(res.data.messages || []);
 
-        // Emit messages_seen event
         if (user?._id) {
           socket.emit("messages_seen", {
             senderId: userId,
@@ -62,29 +61,25 @@ export default function ChatWindow() {
   }, [messages]);
 
   useEffect(() => {
-    // Tell server this user is online
-    if (user?._id) {
-      socket.emit("user_online", user._id);
-    }
+    if (!user?._id) return;
 
-    // Listen for incoming messages
+    socket.emit("user_online", user._id);
+
     socket.on("receive_message", (message) => {
       setMessages((prev) => [...prev, message]);
     });
 
-    // Listen for delivery confirmation
-    socket.on("messages_delivered", ({ receiverId, messageIds }) => {
+    socket.on("messages_delivered", ({ messageIds }) => {
       setMessages((prev) =>
         prev.map((msg) =>
-          messageIds && messageIds.includes(msg._id)
+          messageIds?.includes(msg._id)
             ? { ...msg, status: "delivered" }
             : msg,
         ),
       );
     });
 
-    // Listen for seen confirmation
-    socket.on("messages_seen", ({ senderId, receiverId }) => {
+    socket.on("messages_seen", ({ senderId }) => {
       setMessages((prev) =>
         prev.map((msg) =>
           msg.senderId === senderId ? { ...msg, status: "seen" } : msg,
@@ -100,17 +95,26 @@ export default function ChatWindow() {
   }, [user?._id]);
 
   const handleSend = async () => {
-    if (!text.trim() || isSending) return;
+    const trimmed = text.trim();
+    if (!trimmed || isSending) return;
+
     setIsSending(true);
 
     try {
-      const res = await axiosInstance.post("/messages/send", {
+      const payload = {
         receiverId: userId,
-        text: text.trim(),
-      });
-      // add to messages immediately
-      setMessages((prev) => [...prev, res.data.message]);
+        text: trimmed,
+        ...(replyTo && { replyTo: replyTo._id }),
+      };
+
+      const res = await axiosInstance.post("/messages/send", payload);
+      const sentMessage = res.data.message;
+
+      if (replyTo) sentMessage.replyTo = replyTo;
+
+      setMessages((prev) => [...prev, sentMessage]);
       setText("");
+      setReplyTo(null);
     } catch (err) {
       console.log("Error sending message:", err);
     } finally {
@@ -118,112 +122,32 @@ export default function ChatWindow() {
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
+  const handleReply = (message) => setReplyTo(message);
+  const cancelReply = () => setReplyTo(null);
+  const handleTextChange = (value) => setText(value);
 
-  const formatTime = (date) => {
-    return new Date(date).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const handleKeyDown = (event) => {
+    if (event.key !== "Enter" || event.shiftKey) return;
+    event.preventDefault();
+    handleSend();
   };
 
   return (
-    <div className="chat-page">
-      <div className="chat-window">
-        {/* HEADER */}
-        <div className="chat-window-header">
-          <button className="back-btn" onClick={() => router.push("/chat")}>
-            ←
-          </button>
-
-          <div className="chat-avatar">
-            <div className="avatar-circle">
-              {friend?.profilePic ? (
-                <Image src={friend.profilePic} alt="avatar" />
-              ) : (
-                friend?.username?.[0]?.toUpperCase() || "?"
-              )}
-            </div>
-            <span
-              className={`status-dot ${friend?.isOnline ? "online" : "offline"}`}
-            />
-          </div>
-
-          <div>
-            <p className="header-name">
-              {friend?.name || friend?.username || "Loading..."}
-            </p>
-            <p className="header-status">
-              {friend?.isOnline ? "Online" : "Offline"}
-            </p>
-          </div>
-        </div>
-
-        {/* MESSAGES */}
-        <div className="messages-area">
-          {isLoading && <p className="messages-loading">Loading messages...</p>}
-
-          {!isLoading && messages.length === 0 && (
-            <p className="messages-loading">No messages yet. Say hi! 👋</p>
-          )}
-
-          {messages.map((msg) => {
-            const isSent =
-              msg.senderId === user?._id || msg.senderId?._id === user?._id;
-
-            return (
-              <div
-                key={msg._id}
-                className={`message-wrapper ${isSent ? "sent" : "received"}`}
-              >
-                <div
-                  className={`message-bubble ${isSent ? "sent" : "received"}`}
-                >
-                  {msg.text}
-                  <div className="message-footer">
-                    <span className="message-time">
-                      {formatTime(msg.createdAt)}
-                    </span>
-                    {isSent && (
-                      <span className={`message-ticks ${msg.status}`}>
-                        {msg.status === "sent" && "✓"}
-                        {msg.status === "delivered" && "✓✓"}
-                        {msg.status === "seen" && "✓✓"}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          <div ref={bottomRef} />
-        </div>
-
-        {/* INPUT */}
-        <div className="chat-input-area">
-          <textarea
-            className="chat-input"
-            placeholder="Type a message..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            rows={1}
-          />
-          <button
-            className="send-btn"
-            onClick={handleSend}
-            disabled={isSending || !text.trim()}
-          >
-            ➤
-          </button>
-        </div>
-      </div>
-    </div>
+    <ChatWindow
+      friend={friend}
+      user={user}
+      messages={messages}
+      isLoading={isLoading}
+      text={text}
+      replyTo={replyTo}
+      isSending={isSending}
+      bottomRef={bottomRef}
+      onTextChange={handleTextChange}
+      onSend={handleSend}
+      onKeyDown={handleKeyDown}
+      onReply={handleReply}
+      onCancelReply={cancelReply}
+      onBack={() => router.push("/chat")}
+    />
   );
 }
