@@ -27,12 +27,13 @@ const sendMessage = async (req, res) => {
     const io = req.app.get("io");
     const onlineUsers = req.app.get("onlineUsers");
 
-    //check if receiver is online
-    const receiverSocketId = onlineUsers[receiverId];
+    // check if receiver is online (user may have multiple sockets)
+    const receiverSocketIds = onlineUsers[receiverId];
 
-    if (receiverSocketId) {
-      // receiver is online — push message instantly
-      io.to(receiverSocketId).emit("receive_message", message);
+    if (receiverSocketIds && receiverSocketIds.size > 0) {
+      receiverSocketIds.forEach((socketId) => {
+        io.to(socketId).emit("receive_message", message);
+      });
 
       // update status to delivered
       message.status = "delivered";

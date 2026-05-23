@@ -3,6 +3,7 @@
 import Image from "next/image";
 import ChatBubble from "./ChatBubble";
 import ChatInput from "./ChatInput";
+import usePresenceStore from '@/store/presenceStore'
 
 export default function ChatWindow({
   friend,
@@ -23,6 +24,11 @@ export default function ChatWindow({
   const friendDisplayName = friend?.name || friend?.username || "Loading...";
   const isOwnMessage = (senderId) =>
     senderId === user?._id || senderId?._id === user?._id;
+
+  const friendId = friend?._id || friend?._id?.toString?.();
+  const presence = usePresenceStore((s) => s.presence[friendId]);
+  const isFriendOnline = presence?.isOnline ?? friend?.isOnline;
+  const lastSeen = presence?.lastSeen ?? friend?.lastSeen;
 
   const replyAuthor =
     replyTo &&
@@ -52,14 +58,18 @@ export default function ChatWindow({
               )}
             </div>
             <span
-              className={`status-dot ${friend?.isOnline ? "online" : "offline"}`}
+              className={`status-dot ${isFriendOnline ? "online" : "offline"}`}
             />
           </div>
 
           <div>
             <p className="header-name">{friendDisplayName}</p>
             <p className="header-status">
-              {friend?.isOnline ? "Online" : "Offline"}
+              {isFriendOnline
+                ? "Online"
+                : lastSeen
+                ? `Last seen: ${new Date(lastSeen).toLocaleString()}`
+                : "Offline"}
             </p>
           </div>
         </div>

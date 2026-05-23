@@ -42,4 +42,20 @@ const updateProfile = async (req, res) => {
   }
 }
 
+const markLastSeen = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const lastSeen = new Date();
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { isOnline: false, lastSeen },
+      { new: true },
+    ).select('-password');
+
+    res.status(200).json({ message: 'Marked lastSeen', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
 module.exports = { searchByPhone, updateProfile }
