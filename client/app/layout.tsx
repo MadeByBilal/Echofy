@@ -1,19 +1,23 @@
 'use client'
 
+import { Manrope } from 'next/font/google'
 
-
-
-import { Inter } from 'next/font/google'
-
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import useAuthStore from '@/store/authStore'
 import usePresence from '@/hooks/usePresence'
+import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-manrope',
+})
 
-export default function RootLayout({ children }) {
+export default function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const { getMe } = useAuthStore()
-  // initialize presence listeners (socket events)
   usePresence()
 
   useEffect(() => {
@@ -21,8 +25,17 @@ export default function RootLayout({ children }) {
   }, [])
 
   return (
-    <html lang="en">
-      <body className={inter.className} suppressHydrationWarning={true}>
+    <html lang="en" className="dark">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body
+        className={`${manrope.variable} bg-background text-on-background antialiased`}
+        suppressHydrationWarning={true}
+      >
         {children}
       </body>
     </html>

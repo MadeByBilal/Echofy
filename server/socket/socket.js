@@ -1,80 +1,43 @@
 const Message = require("../models/Message.model");
 const User = require("../models/User.model");
 
-// Map of userId -> Set(socketId)
-const onlineUsers = {};
-// Map of userId -> timeoutId for delayed offline marking
-const disconnectTimeouts = {};
+const onlineUsers = {}; // userId -> Set of socketIds
+const disconnectTimeouts = {}; // userId -> timeoutId
 
-// configurable timeout (ms) before marking user offline after last disconnect
-const OFFLINE_TIMEOUT = process.env.OFFLINE_TIMEOUT_MS
-  ? parseInt(process.env.OFFLINE_TIMEOUT_MS, 10)
-  : 30000; // default 30s
+const OFFLINE_TIMEOUT = parseInt(process.env.OFFLINE_TIMEOUT_MS || "30000", 10);
 
 const initSocket = (io) => {
   io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
+    console.log("Socket connected:", socket.id);
 
-    // user comes online (sent from client after login or reconnect)
+    // ─── USER COMES ONLINE ───────────────────────────────────────
     socket.on("user_online", async (userId) => {
-      try {
-        if (!userId) return;
+      if (!userId) return;
 
-        // add socket id to set
+      try {
+        // track this socket
         if (!onlineUsers[userId]) onlineUsers[userId] = new Set();
         onlineUsers[userId].add(socket.id);
 
-        // clear pending offline timeout if any
+        // cancel any pending offline timeout
         if (disconnectTimeouts[userId]) {
           clearTimeout(disconnectTimeouts[userId]);
           delete disconnectTimeouts[userId];
         }
 
-        // update DB isOnline true
-        await User.findByIdAndUpdate(userId, { isOnline: true }, { new: true });
-
-        // broadcast presence update to clients
+        // mark online in DB + broadcast
+        await User.findByIdAndUpdate(userId, { isOnline: true });
         io.emit("user_status", { userId, isOnline: true });
         io.emit("online_users", Object.keys(onlineUsers));
 
-        // deliver undelivered messages (existing behavior)
-        const undeliveredMessages = await Message.find({
-          receiverId: userId,
-          status: "sent",
-        });
-
-        if (undeliveredMessages.length > 0) {
-          await Message.updateMany(
-            { receiverId: userId, status: "sent" },
-            { status: "delivered" },
-          );
-
-          const senderIds = [
-            ...new Set(undeliveredMessages.map((m) => m.senderId.toString())),
-          ];
-          senderIds.forEach((senderId) => {
-            const senderSockets = onlineUsers[senderId];
-            if (senderSockets) {
-              // notify all sockets of the sender
-              senderSockets.forEach((sid) => {
-                io.to(sid).emit("messages_delivered", {
-                  receiverId: userId,
-                  messageIds: undeliveredMessages
-                    .filter((m) => m.senderId.toString() === senderId)
-                    .map((m) => m._id),
-                });
-              });
-            }
-          });
-        }
-      } catch (error) {
-        console.log("Error in user_online handler:", error);
+        // deliver any pending messages
+        await deliverPendingMessages(io, userId);
+      } catch (err) {
+        console.log("user_online error:", err);
       }
     });
 
-    
-
-    // user opens a chat — mark messages as seen
+    // ─── MESSAGES SEEN ───────────────────────────────────────────
     socket.on("messages_seen", async ({ senderId, receiverId }) => {
       try {
         await Message.updateMany(
@@ -82,61 +45,70 @@ const initSocket = (io) => {
           { status: "seen" },
         );
 
-        const senderSockets = onlineUsers[senderId];
-        if (senderSockets) {
-          senderSockets.forEach((sid) => {
-            io.to(sid).emit("messages_seen", { senderId, receiverId });
-          });
-        }
-      } catch (error) {
-        console.log("Error updating seen status:", error);
+        onlineUsers[senderId]?.forEach((sid) => {
+          io.to(sid).emit("messages_seen", { senderId, receiverId });
+        });
+      } catch (err) {
+        console.log("messages_seen error:", err);
       }
     });
 
-    // handle disconnect: remove this socket from any user's set and
-    // if that was the last socket, schedule marking user offline
+    // ─── DISCONNECT ──────────────────────────────────────────────
     socket.on("disconnect", () => {
-      try {
-        const affectedUserIds = Object.keys(onlineUsers).filter((userId) =>
-          onlineUsers[userId].has(socket.id),
-        );
+      const userId = Object.keys(onlineUsers).find((id) =>
+        onlineUsers[id].has(socket.id),
+      );
 
-        affectedUserIds.forEach((userId) => {
-          const sockets = onlineUsers[userId];
-          sockets.delete(socket.id);
+      if (!userId) return;
 
-          if (sockets.size === 0) {
-            // schedule offline marking after timeout
-            disconnectTimeouts[userId] = setTimeout(async () => {
-              try {
-                const lastSeen = new Date();
-                await User.findByIdAndUpdate(
-                  userId,
-                  { isOnline: false, lastSeen },
-                  { new: true },
-                );
+      onlineUsers[userId].delete(socket.id);
 
-                // remove user from online map and clear timeout
-                delete onlineUsers[userId];
-                delete disconnectTimeouts[userId];
+      // still has other tabs open — do nothing
+      if (onlineUsers[userId].size > 0) return;
 
-                // broadcast offline status with lastSeen timestamp
-                io.emit("user_status", { userId, isOnline: false, lastSeen });
-                io.emit("online_users", Object.keys(onlineUsers));
-              } catch (err) {
-                console.log("Error marking user offline:", err);
-              }
-            }, OFFLINE_TIMEOUT);
-          } else {
-            // still has other sockets open for this user
-            io.emit("online_users", Object.keys(onlineUsers));
-          }
-        });
-      } catch (error) {
-        console.log("Error in disconnect handler:", error);
-      }
+      // last socket closed — remove immediately + broadcast
+      delete onlineUsers[userId];
+      io.emit("user_status", { userId, isOnline: false });
+      io.emit("online_users", Object.keys(onlineUsers));
+
+      // delay DB write in case they reconnect fast
+      disconnectTimeouts[userId] = setTimeout(async () => {
+        try {
+          await User.findByIdAndUpdate(userId, {
+            isOnline: false,
+            lastSeen: new Date(),
+          });
+          delete disconnectTimeouts[userId];
+        } catch (err) {
+          console.log("offline DB update error:", err);
+        }
+      }, OFFLINE_TIMEOUT);
     });
   });
 };
+
+// ─── HELPER ─────────────────────────────────────────────────────
+async function deliverPendingMessages(io, userId) {
+  const messages = await Message.find({ receiverId: userId, status: "sent" });
+  if (!messages.length) return;
+
+  await Message.updateMany(
+    { receiverId: userId, status: "sent" },
+    { status: "delivered" },
+  );
+
+  const bySender = messages.reduce((acc, m) => {
+    const id = m.senderId.toString();
+    if (!acc[id]) acc[id] = [];
+    acc[id].push(m._id);
+    return acc;
+  }, {});
+
+  Object.entries(bySender).forEach(([senderId, messageIds]) => {
+    onlineUsers[senderId]?.forEach((sid) => {
+      io.to(sid).emit("messages_delivered", { receiverId: userId, messageIds });
+    });
+  });
+}
 
 module.exports = { initSocket, onlineUsers };

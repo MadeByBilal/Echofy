@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #141313;
+  --color-surface-dim: #141313;
+  --color-surface: #141313;
+  --color-on-background: #e5e2e1;
+  --color-on-surface: #e5e2e1;
+  --color-surface-container-low: #1c1b1b;
+  --color-surface-container: #201f1f;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-variant: #353434;
+  --color-on-surface-variant: #c4c7c8;
+  --color-on-tertiary-container: #656464;
+  --color-outline: #8e9192;
+  --color-outline-variant: #444748;
+  --color-primary: #ffffff;
+  --color-on-primary: #2f3131;
+  --color-tertiary: #ffffff;
+  --color-primary-container: #e2e2e2;
+  --color-on-primary-container: #636565;
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+
+  --spacing-margin-page: 24px;
+  --spacing-gutter-stack: 12px;
+  --spacing-padding-bubble: 16px;
+  --spacing-inset-container: 20px;
+
+  --font-headline-lg: var(--font-manrope), sans-serif;
+  --font-headline-lg-mobile: var(--font-manrope), sans-serif;
+  --font-title-md: var(--font-manrope), sans-serif;
+  --font-body-md: var(--font-manrope), sans-serif;
+  --font-label-sm: var(--font-manrope), sans-serif;
+
+  --text-headline-lg: 24px;
+  --text-headline-lg--line-height: 32px;
+  --text-headline-lg-mobile: 22px;
+  --text-headline-lg-mobile--line-height: 28px;
+  --text-title-md: 18px;
+  --text-title-md--line-height: 24px;
+  --text-body-md: 14px;
+  --text-body-md--line-height: 20px;
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+}
+
+body {
+  font-family: var(--font-manrope), sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  min-height: max(884px, 100dvh);
+}
+
+.message-row:active {
+  transform: scale(0.98);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.active-scale:active {
+  transform: scale(0.98);
+  transition: transform 0.2s ease;
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #141313;
+  background-color: #4ade80;
+}
+
+.scroll-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  line-height: 1;
+  user-select: none;
+}
+
+.message-bubble-incoming {
+  border-bottom-left-radius: 4px;
+}
+
+.message-bubble-outgoing {
+  border-bottom-right-radius: 4px;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}

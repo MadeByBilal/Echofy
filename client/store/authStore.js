@@ -23,9 +23,10 @@ const useAuthStore = create((set) => ({
       const res = await axiosInstance.post("/auth/login", data);
       const user = res.data.user;
 
-      // connect socket immediately after login
       socket.connect();
-      socket.emit("user_online", user._id);
+      socket.once("connect", () => {
+        socket.emit("user_online", user._id);
+      });
 
       set({ user, isLoading: false });
     } catch (error) {
@@ -39,9 +40,14 @@ const useAuthStore = create((set) => ({
       const res = await axiosInstance.get("/auth/me");
       const user = res.data.user;
 
-      // reconnect socket on page refresh
       if (!socket.connected) {
         socket.connect();
+        // ✅ wait for connection THEN emit
+        socket.once("connect", () => {
+          socket.emit("user_online", user._id);
+        });
+      } else {
+        // already connected (edge case), just emit
         socket.emit("user_online", user._id);
       }
 
@@ -63,6 +69,8 @@ const useAuthStore = create((set) => ({
       console.log(error);
     }
   },
+
+  setUser: (user) => set({ user }),
 }));
 
 export default useAuthStore;

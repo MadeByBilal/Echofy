@@ -6,7 +6,6 @@ import axiosInstance from "@/lib/axiosInstance";
 import useAuthStore from "@/store/authStore";
 import socket from "@/lib/socket";
 import ChatWindow from "@/components/chat/ChatWindow";
-import "../chat.css";
 
 export default function ChatPage() {
   const { userId } = useParams();

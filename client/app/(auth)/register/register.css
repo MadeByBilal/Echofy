@@ -1,7 +1,7 @@
 /* register.css – matches the login page styling perfectly */
 
-/* ---------- Variables & Reset ---------- */
-:root {
+/* ---------- Variables & Reset (scoped to register container) ---------- */
+.register-container {
   --color-bg: #0f0f13;
   --color-surface: rgba(255, 255, 255, 0.05);
   --color-glass-border: rgba(255, 255, 255, 0.1);
@@ -22,19 +22,13 @@
   padding: 0;
 }
 
-body {
-  background: var(--color-bg);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: var(--color-text);
-  height: 100vh;
-  overflow: hidden;
-}
-
 /* ---------- Container ---------- */
 .register-container {
   display: flex;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100dvh;
+  overflow: auto;
+  background-color: var(--color-background);
+  color: var(--color-on-background);
 }
 
 /* ---------- Left Section ---------- */
