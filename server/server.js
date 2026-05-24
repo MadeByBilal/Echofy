@@ -16,7 +16,8 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const allowedOrigins = (
-  process.env.CORS_ORIGINS || "http://localhost:3001"
+  process.env.CORS_ORIGINS ||
+  "http://localhost:3001,https://echofy20.vercel.app/"
 ).split(",");
 
 const io = new Server(server, {
