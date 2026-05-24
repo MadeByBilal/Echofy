@@ -10,7 +10,14 @@ const useAuthStore = create((set) => ({
     set({ isLoading: true });
     try {
       const res = await axiosInstance.post("/auth/register", data);
-      set({ user: res.data.user, isLoading: false });
+      const user = res.data.user;
+
+      socket.connect();
+      socket.once("connect", () => {
+        socket.emit("user_online", user._id);
+      });
+
+      set({ user, isLoading: false });
     } catch (error) {
       set({ isLoading: false });
       throw error;

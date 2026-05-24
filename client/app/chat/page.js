@@ -22,9 +22,7 @@ function FriendAvatar({ friend }) {
   }
 
   return (
-    <div
-      className="flex h-14 w-14 items-center justify-center rounded-full border border-outline-variant/30 bg-surface-container-high text-lg font-semibold text-on-surface"
-    >
+    <div className="flex h-14 w-14 items-center justify-center rounded-full border border-outline-variant/30 bg-surface-container-high text-lg font-semibold text-on-surface">
       {initial}
     </div>
   );
@@ -80,7 +78,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="bg-background pb-24">
       <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between bg-background px-margin-page">
         <h1 className="text-headline-lg-mobile font-semibold text-on-surface">
           Messages
@@ -95,7 +93,7 @@ export default function ChatPage() {
         </button>
       </header>
 
-      <main className="min-h-screen px-margin-page pt-16">
+      <main className="px-margin-page pt-16">
         <div className="relative mt-4">
           <MaterialIcon
             name="search"
@@ -123,13 +121,11 @@ export default function ChatPage() {
             </p>
           )}
 
-          {!isLoading &&
-            friends.length > 0 &&
-            filteredFriends.length === 0 && (
-              <p className="py-10 text-center text-body-md text-outline">
-                No conversations match your search.
-              </p>
-            )}
+          {!isLoading && friends.length > 0 && filteredFriends.length === 0 && (
+            <p className="py-10 text-center text-body-md text-outline">
+              No conversations match your search.
+            </p>
+          )}
 
           {filteredFriends.map((friend) => {
             const friendId = friend._id?.toString?.() || friend._id;
@@ -162,7 +158,9 @@ export default function ChatPage() {
                     {lastMessageTime && (
                       <span
                         className={`ml-2 shrink-0 text-label-sm ${
-                          isRecent ? "text-primary" : "text-on-tertiary-container"
+                          isRecent
+                            ? "text-primary"
+                            : "text-on-tertiary-container"
                         }`}
                       >
                         {formatLastMessageTime(lastMessageTime)}

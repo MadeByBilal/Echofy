@@ -203,7 +203,7 @@ export default function FriendsPage() {
   };
 
   return (
-    <div className="min-h-screen scroll-hide bg-background pb-24 text-on-background">
+    <div className="scroll-hide bg-background pb-24 text-on-background">
       <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between bg-background px-margin-page">
         <div className="flex items-center gap-4">
           <button
@@ -228,7 +228,7 @@ export default function FriendsPage() {
         </button>
       </header>
 
-      <main className="min-h-screen px-margin-page pt-16">
+      <main className="px-margin-page pt-16">
         <div className="relative mt-4 mb-8">
           <MaterialIcon
             name="search"
