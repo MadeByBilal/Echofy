@@ -28,11 +28,14 @@ const register = async (req, res) => {
     const token = generateToken(user._id);
 
     // send token in cookie
-    res.cookie("token", token, {
-      httpOnly: true, // JS in browser can't access it — secure
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
-      sameSite: "lax",
-    });
+    const cookieOptions = {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+    };
+
+    res.cookie("token", token, cookieOptions);
 
     res.status(201).json({
       message: "User registered successfully",
@@ -69,12 +72,14 @@ const login = async (req, res) => {
     // generate token
     const token = generateToken(user._id);
 
-    res.cookie("token", token, {
+    const cookieOptions = {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "none", // ← cross-origin
-      secure: true, // ← required for sameSite none
-    });
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: process.env.NODE_ENV === "production",
+    };
+
+    res.cookie("token", token, cookieOptions);
     res.status(200).json({
       message: "Login successful",
       user: {
