@@ -39,6 +39,9 @@ app.use(cookieParser());
 
 connectDB();
 
+// Test Route
+app.get("/health", (req, res) => res.status(200).json({ status: "ok" }));
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/friends", friendRoutes);
