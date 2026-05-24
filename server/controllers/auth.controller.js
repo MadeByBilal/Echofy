@@ -69,13 +69,12 @@ const login = async (req, res) => {
     // generate token
     const token = generateToken(user._id);
 
-    // send token in cookie
     res.cookie("token", token, {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "lax",
+      sameSite: "none", // ← cross-origin
+      secure: true, // ← required for sameSite none
     });
-
     res.status(200).json({
       message: "Login successful",
       user: {
@@ -91,13 +90,13 @@ const login = async (req, res) => {
 // INFO OF THE CURRENT USER LOGIN
 const getMe = async (req, res) => {
   res.status(200).json({
-    user: req.user // this came from the middleware
-  })
-}
+    user: req.user, // this came from the middleware
+  });
+};
 // LOGOUT THE USER
 const logout = async (req, res) => {
-  res.clearCookie('token')
-  res.status(200).json({ message: 'Logged out successfully' })
-}
+  res.clearCookie("token");
+  res.status(200).json({ message: "Logged out successfully" });
+};
 
-module.exports = { register, login, logout ,getMe }
+module.exports = { register, login, logout, getMe };
