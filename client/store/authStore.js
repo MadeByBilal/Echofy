@@ -12,9 +12,14 @@ const useAuthStore = create((set) => ({
       const res = await axiosInstance.post("/auth/register", data);
       const user = res.data.user;
 
+      // normalize backend id shape (some endpoints return `id` instead of `_id`)
+      if (user && !user._id && user.id) user._id = user.id;
+
       socket.connect();
       socket.once("connect", () => {
-        socket.emit("user_online", user._id);
+        if (user && (user._id || user.id)) {
+          socket.emit("user_online", user._id || user.id);
+        }
       });
 
       set({ user, isLoading: false });
@@ -30,9 +35,13 @@ const useAuthStore = create((set) => ({
       const res = await axiosInstance.post("/auth/login", data);
       const user = res.data.user;
 
+      if (user && !user._id && user.id) user._id = user.id;
+
       socket.connect();
       socket.once("connect", () => {
-        socket.emit("user_online", user._id);
+        if (user && (user._id || user.id)) {
+          socket.emit("user_online", user._id || user.id);
+        }
       });
 
       set({ user, isLoading: false });
@@ -46,6 +55,8 @@ const useAuthStore = create((set) => ({
     try {
       const res = await axiosInstance.get("/auth/me");
       const user = res.data.user;
+
+      if (user && !user._id && user.id) user._id = user.id;
 
       if (!socket.connected) {
         socket.connect();
