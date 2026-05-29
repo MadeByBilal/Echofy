@@ -1,65 +1,71 @@
 // app/auth/register/page.jsx
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import Image from 'next/image'
-import useAuthStore from '@/store/authStore'
-import './register.css'
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import useAuthStore from "@/store/authStore";
+import "./register.css";
 
 const testimonials = [
   {
-    avatarSrc: 'https://randomuser.me/api/portraits/women/57.jpg',
-    name: 'Sarah Chen',
-    handle: '@sarahdigital',
-    text: 'Amazing platform! The user experience is seamless and the features are exactly what I needed.',
+    avatarSrc: "https://randomuser.me/api/portraits/women/57.jpg",
+    name: "Sarah Chen",
+    handle: "@sarahdigital",
+    text: "Amazing platform! The user experience is seamless and the features are exactly what I needed.",
   },
   {
-    avatarSrc: 'https://randomuser.me/api/portraits/men/64.jpg',
-    name: 'Marcus Johnson',
-    handle: '@marcustech',
-    text: 'This service has transformed how I work. Clean design, powerful features, and excellent support.',
+    avatarSrc: "https://randomuser.me/api/portraits/men/64.jpg",
+    name: "Marcus Johnson",
+    handle: "@marcustech",
+    text: "This service has transformed how I work. Clean design, powerful features, and excellent support.",
   },
   {
-    avatarSrc: 'https://randomuser.me/api/portraits/men/32.jpg',
-    name: 'David Martinez',
-    handle: '@davidcreates',
+    avatarSrc: "https://randomuser.me/api/portraits/men/32.jpg",
+    name: "David Martinez",
+    handle: "@davidcreates",
     text: "I've tried many platforms, but this one stands out. Intuitive, reliable, and genuinely helpful for productivity.",
   },
-]
+];
 
 export default function RegisterPage() {
-  const router = useRouter()
-  const { register, isLoading } = useAuthStore()
+  const router = useRouter();
+  const { register, isLoading, user } = useAuthStore();
 
   const [formData, setFormData] = useState({
-    username: '',
-    phone: '',
-    password: '',
-  })
-  const [error, setError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+    username: "",
+    phone: "",
+    password: "",
+  });
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
     try {
-      await register(formData)
-      router.push('/setup')
+      await register(formData);
+      router.push("/setup");
     } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong')
+      setError(err.response?.data?.message || "Something went wrong");
     }
-  }
+  };
+
+  useEffect(() => {
+    if (user) {
+      router.replace("/chat");
+    }
+  }, [user, router]);
 
   const handleGoogleSignIn = () => {
-    console.log('Google sign-in')
-  }
+    console.log("Google sign-in");
+  };
 
   return (
     <div className="register-container">
@@ -74,7 +80,9 @@ export default function RegisterPage() {
           </p>
 
           {error && (
-            <p className="error-msg animate-element animate-delay-250">{error}</p>
+            <p className="error-msg animate-element animate-delay-250">
+              {error}
+            </p>
           )}
 
           <form className="register-form" onSubmit={handleSubmit} noValidate>
@@ -120,7 +128,7 @@ export default function RegisterPage() {
                 <input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Create a password"
                   value={formData.password}
                   onChange={handleChange}
@@ -170,14 +178,14 @@ export default function RegisterPage() {
               className="btn-primary animate-element animate-delay-600"
               disabled={isLoading}
             >
-              {isLoading ? 'Creating account...' : 'Create Account'}
+              {isLoading ? "Creating account..." : "Create Account"}
             </button>
           </form>
 
           <div className="divider-wrapper animate-element animate-delay-700">
             <span className="divider-line"></span>
             <span className="divider-text">Or continue with</span>
-                 <span className="divider-line"></span>
+            <span className="divider-line"></span>
           </div>
 
           <button
@@ -212,7 +220,7 @@ export default function RegisterPage() {
           </button>
 
           <p className="create-account-text animate-element animate-delay-900">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <Link href="/login" className="create-account-link">
               Login
             </Link>
@@ -226,7 +234,7 @@ export default function RegisterPage() {
           className="hero-image animate-slide-right animate-delay-300"
           style={{
             backgroundImage:
-              'url(https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80)',
+              "url(https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80)",
           }}
           role="img"
           aria-label="Decorative hero background"
@@ -235,8 +243,8 @@ export default function RegisterPage() {
         {testimonials.length > 0 && (
           <div className="testimonials-strip">
             {testimonials.map((testimonial, index) => {
-              const cardClass = `testimonial-card testimonial-card-${index + 1}`
-              const delayClass = `animate-delay-${1000 + index * 200}`
+              const cardClass = `testimonial-card testimonial-card-${index + 1}`;
+              const delayClass = `animate-delay-${1000 + index * 200}`;
               return (
                 <div
                   key={index}
@@ -256,11 +264,11 @@ export default function RegisterPage() {
                     <p className="testimonial-text">{testimonial.text}</p>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         )}
       </section>
     </div>
-  )
+  );
 }

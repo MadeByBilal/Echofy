@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
 // protected routes — must be logged in
-// Temporarily removed '/setup' so newly-registered users can access it without the auth cookie
-const protectedRoutes = [];
+const protectedRoutes = ["/chat", "/friends", "/setup"];
 
 // auth routes — if logged in, can't go back here
 const authRoutes = ["/login", "/register"];

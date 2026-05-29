@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -30,7 +30,7 @@ const testimonials = [
 
 export default function SignInPage() {
   const router = useRouter();
-  const { login, isLoading } = useAuthStore();
+  const { login, isLoading, user } = useAuthStore();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -62,6 +62,12 @@ export default function SignInPage() {
       );
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      router.replace("/chat");
+    }
+  }, [user, router]);
 
   const handleGoogleSignIn = () => {
     // TODO: integrate your OAuth provider

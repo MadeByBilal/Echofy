@@ -30,7 +30,7 @@ const register = async (req, res) => {
     // send token in cookie
     const cookieOptions = {
       httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       secure: process.env.NODE_ENV === "production",
     };
