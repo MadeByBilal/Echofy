@@ -22,6 +22,13 @@ const useAuthStore = create((set) => ({
         }
       });
 
+      // persist token in localStorage so auth survives reloads
+      try {
+        if (res?.data?.token && typeof window !== "undefined") {
+          localStorage.setItem("token", res.data.token);
+        }
+      } catch (e) {}
+
       set({ user, isLoading: false });
     } catch (error) {
       set({ isLoading: false });
@@ -43,6 +50,12 @@ const useAuthStore = create((set) => ({
           socket.emit("user_online", user._id || user.id);
         }
       });
+
+      try {
+        if (res?.data?.token && typeof window !== "undefined") {
+          localStorage.setItem("token", res.data.token);
+        }
+      } catch (e) {}
 
       set({ user, isLoading: false });
     } catch (error) {
@@ -80,9 +93,15 @@ const useAuthStore = create((set) => ({
     try {
       await axiosInstance.post("/auth/logout");
       socket.disconnect();
+      try {
+        if (typeof window !== "undefined") localStorage.removeItem("token");
+      } catch (e) {}
       set({ user: null });
     } catch (error) {
       socket.disconnect();
+      try {
+        if (typeof window !== "undefined") localStorage.removeItem("token");
+      } catch (e) {}
       set({ user: null });
       console.log(error);
     }
