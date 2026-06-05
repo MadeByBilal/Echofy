@@ -132,27 +132,13 @@ export default function ChatInput({
     mediaRecorder.current = null;
   }, []);
 
-  const handleMicPointerDown = useCallback((e) => {
-    e.preventDefault();
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-    startRecording();
-  }, [startRecording]);
-
-  const handleMicPointerUp = useCallback((e) => {
-    e.preventDefault();
-    e.currentTarget.releasePointerCapture?.(e.pointerId);
-    stopRecording();
-  }, [stopRecording]);
-
-  const handleMicPointerCancel = useCallback((e) => {
-    e.preventDefault();
-    cancelRef.current = true;
-    stopRecording();
-  }, [stopRecording]);
-
-  const handleMicPointerLeave = useCallback(() => {
-    cancelRef.current = true;
-  }, []);
+  const handleMicClick = useCallback(() => {
+    if (recording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  }, [recording, startRecording, stopRecording]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -222,20 +208,23 @@ export default function ChatInput({
 
         {/* Right button: Send, Mic, or Recording */}
         {recording ? (
-          <div className="flex h-12 shrink-0 items-center gap-3 rounded-full bg-error px-4 shadow-lg">
-            <span className="text-label-sm font-semibold text-on-primary">{formatTimer(recordingTime)}</span>
+          <button
+            type="button"
+            onClick={handleMicClick}
+            className="flex h-12 shrink-0 items-center gap-2 rounded-full bg-error pl-3 pr-4 shadow-lg transition-all active:scale-95"
+            aria-label="Stop recording"
+          >
             <span className="flex h-3 w-3 rounded-full bg-white animate-pulse" />
-          </div>
+            <span className="text-label-sm font-semibold text-white">{formatTimer(recordingTime)}</span>
+            <MaterialIcon name="stop" className="text-xl text-white" />
+          </button>
         ) : showMic && !disabled ? (
           <button
             ref={micRef}
             type="button"
-            onPointerDown={handleMicPointerDown}
-            onPointerUp={handleMicPointerUp}
-            onPointerCancel={handleMicPointerCancel}
-            onPointerLeave={handleMicPointerLeave}
-            className="flex h-12 w-12 shrink-0 touch-none items-center justify-center rounded-full bg-primary text-on-primary shadow-lg shadow-white/5 transition-all duration-200 active:scale-95"
-            aria-label="Hold to record"
+            onClick={handleMicClick}
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary shadow-lg shadow-white/5 transition-all duration-200 active:scale-95"
+            aria-label={recording ? "Stop recording" : "Start recording"}
           >
             {isUploading ? (
               <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
