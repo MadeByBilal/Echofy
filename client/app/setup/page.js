@@ -64,6 +64,8 @@ function SetupContent() {
   const [showBgPicker, setShowBgPicker] = useState(false);
   const chatBg = useChatBackgroundStore((s) => s.bg);
   const setChatBg = useChatBackgroundStore((s) => s.setBg);
+  const customColor = useChatBackgroundStore((s) => s.customColor);
+  const setCustomColor = useChatBackgroundStore((s) => s.setCustomColor);
 
   useEffect(() => {
     getMe();
@@ -309,20 +311,46 @@ function SetupContent() {
             />
 
             {showBgPicker && (
-              <div className="bg-picker-grid">
-                {Object.keys(BACKGROUNDS).map((key) => (
+              <div>
+                <div className="bg-picker-grid">
+                  {Object.entries(BACKGROUNDS).map(([key, val]) => (
+                    <button
+                      key={key}
+                      className={`bg-option ${chatBg === key ? "active" : ""}`}
+                      onClick={() => setChatBg(key)}
+                    >
+                      <span
+                        className="bg-swatch"
+                        style={{
+                          background: val.swatch,
+                          border: key === "default" ? "1px solid rgba(255,255,255,0.06)" : "none",
+                        }}
+                      />
+                      <span className="bg-label">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                    </button>
+                  ))}
                   <button
-                    key={key}
-                    className={`bg-option ${chatBg === key ? "active" : ""}`}
-                    onClick={() => {
-                      setChatBg(key);
-                      setShowBgPicker(false);
-                    }}
+                    className={`bg-option ${chatBg === "custom" ? "active" : ""}`}
+                    onClick={() => setChatBg("custom")}
                   >
-                    <span className={`bg-swatch ${key === "default" ? "swatch-default" : ""}`} />
-                    <span className="bg-label">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                    <span
+                      className="bg-swatch"
+                      style={{ background: customColor }}
+                    />
+                    <span className="bg-label">Custom</span>
                   </button>
-                ))}
+                </div>
+                {chatBg === "custom" && (
+                  <div className="custom-color-row">
+                    <input
+                      type="color"
+                      value={customColor}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                      className="color-picker-input"
+                    />
+                    <span className="color-hex-label">{customColor}</span>
+                  </div>
+                )}
               </div>
             )}
 

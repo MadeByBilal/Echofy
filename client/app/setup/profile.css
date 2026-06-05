@@ -128,18 +128,30 @@
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.06);
 }
-.bg-swatch.swatch-default {
-  background: var(--color-surface-container-low, #1c1b1b);
-}
 .bg-label { font-size: 11px; text-align: center; white-space: nowrap; }
 
-.bg-option:nth-child(1) .bg-swatch { background: linear-gradient(135deg, #2a1a1a, #1a0f0f); }
-.bg-option:nth-child(2) .bg-swatch { background: linear-gradient(135deg, #1c1c1c, #121212); }
-.bg-option:nth-child(3) .bg-swatch { background: linear-gradient(135deg, #0f1a2e, #0a101c); }
-.bg-option:nth-child(4) .bg-swatch { background: linear-gradient(135deg, #0f1f14, #0a140c); }
-.bg-option:nth-child(5) .bg-swatch { background: linear-gradient(135deg, #1e0f2e, #120a1c); }
-.bg-option:nth-child(6) .bg-swatch { background: linear-gradient(135deg, #2a1a0f, #1a0f0a); }
-.bg-option:nth-child(7) .bg-swatch { background: linear-gradient(135deg, #0f1f1f, #0a1414); }
+.custom-color-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px 16px;
+}
+.color-picker-input {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: none;
+  padding: 0;
+}
+.color-picker-input::-webkit-color-swatch-wrapper { padding: 0; }
+.color-picker-input::-webkit-color-swatch { border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; }
+.color-hex-label {
+  font-size: 13px;
+  color: var(--color-on-surface-variant, #c4c7c8);
+  font-family: monospace;
+}
 
 @media (max-width: 768px) {
   .profile-main { padding: 20px; }

@@ -56,7 +56,10 @@ export default function ChatWindow({
   const isFriendOnline = presence?.isOnline ?? false;
   const lastSeen = presence?.lastSeen;
   const chatBgKey = useChatBackgroundStore((s) => s.bg);
-  const chatBgClass = BACKGROUNDS[chatBgKey] || "";
+  const chatBgClass = BACKGROUNDS[chatBgKey]?.bg || "";
+  const customBgStyle = useChatBackgroundStore((s) => s.getCustomBgStyle)();
+  const customColor = useChatBackgroundStore((s) => s.customColor);
+  const finalBgStyle = chatBgKey === "custom" && customColor ? customBgStyle : undefined;
 
   const statusLabel = isFriendOnline
     ? "Online"
@@ -117,7 +120,7 @@ export default function ChatWindow({
         </div>
       </header>
 
-      <main className={`no-scrollbar flex min-w-0 flex-grow flex-col gap-gutter-stack overflow-x-hidden overflow-y-auto px-margin-page pt-6 ${chatBgClass}`}>
+      <main className={`no-scrollbar flex min-w-0 flex-grow flex-col gap-gutter-stack overflow-x-hidden overflow-y-auto px-margin-page pt-6 ${chatBgClass}`} style={finalBgStyle}>
         {isLoading && (
           <p className="py-10 text-center text-body-md text-outline">
             Loading messages...
