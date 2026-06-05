@@ -6,6 +6,7 @@ import { useEffect, type ReactNode } from 'react'
 import useAuthStore from '@/store/authStore'
 import usePresence from '@/hooks/usePresence'
 import useNotifications from '@/hooks/useNotifications'
+import NotificationToast from '@/components/ui/NotificationToast'
 import './globals.css'
 
 const manrope = Manrope({
@@ -39,6 +40,7 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         {children}
+        <NotificationToast />
       </body>
     </html>
   )

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import socket from "@/lib/socket";
 import useAuthStore from "@/store/authStore";
 
 export default function useNotifications() {
   const user = useAuthStore((s) => s.user);
+  const userRef = useRef(user);
+  userRef.current = user;
 
   useEffect(() => {
     if (!("Notification" in window)) return;
@@ -18,14 +20,15 @@ export default function useNotifications() {
     if (!user?._id) return;
 
     const handleMessage = (message) => {
-      if (Notification.permission !== "granted") return;
+      const currentUser = userRef.current;
+      if (!currentUser?._id) return;
 
       const senderId =
         typeof message.senderId === "object"
           ? message.senderId._id
           : message.senderId;
 
-      if (senderId === user._id) return;
+      if (senderId === currentUser._id) return;
 
       const path = window.location.pathname;
       if (path === `/chat/${senderId}`) return;
@@ -37,19 +40,30 @@ export default function useNotifications() {
           ? "Sent an image"
           : message.fileUrl
             ? "Sent a file"
-            : "");
+            : "New message");
 
-      if (!body && !name) return;
+      // ── Browser Notification (works when tab is in background) ──
+      if (Notification.permission === "granted") {
+        try {
+          const notification = new Notification(name, {
+            body,
+            icon: "/favicon.ico",
+          });
+          notification.onclick = () => {
+            window.focus();
+            window.location.href = `/chat/${senderId}`;
+          };
+        } catch (e) {
+          console.log("Notification error:", e);
+        }
+      }
 
-      const notification = new Notification(name, {
-        body: body || "New message",
-        icon: "/favicon.ico",
-      });
-
-      notification.onclick = () => {
-        window.focus();
-        window.location.href = `/chat/${senderId}`;
-      };
+      // ── In-app toast event (works on all pages, all devices) ──
+      window.dispatchEvent(
+        new CustomEvent("app:message", {
+          detail: { name, body, senderId },
+        }),
+      );
     };
 
     socket.on("receive_message", handleMessage);
