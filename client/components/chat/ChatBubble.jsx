@@ -27,24 +27,24 @@ function AudioPreview({ message, isMe }) {
   };
 
   const fmt = (s) => {
+    if (!s || isNaN(s)) return "0:00";
     const m = Math.floor(s / 60);
     const sec = Math.floor(s % 60);
     return `${m}:${String(sec).padStart(2, "0")}`;
   };
 
+  const pct = duration > 0 ? (currentTime / duration) * 100 : 0;
+
   return (
-    <div className={`mb-2 mt-1 flex items-center gap-3 rounded-xl p-2 ${isMe ? "bg-white/10" : "bg-surface-variant/30"}`}>
-      <button type="button" onClick={toggle} className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${isMe ? "bg-white/20" : "bg-primary/20"}`}>
-        <MaterialIcon name={playing ? "pause" : "play_arrow"} className={`text-xl ${isMe ? "text-white" : "text-primary"}`} />
+    <div className="mb-1 mt-1 flex items-center gap-3">
+      <button type="button" onClick={toggle} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isMe ? "bg-white/20 text-white" : "bg-primary text-on-primary"} transition-transform active:scale-90`}>
+        <MaterialIcon name={playing ? "pause" : "play_arrow"} filled className="text-xl" />
       </button>
-      <div className="flex-1">
-        <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/20">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: duration ? `${(currentTime / duration) * 100}%` : "0%" }} />
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="relative h-1 flex-1 overflow-hidden rounded-full" style={{ backgroundColor: isMe ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.15)" }}>
+          <div className="h-full rounded-full transition-all duration-200" style={{ width: `${pct}%`, backgroundColor: isMe ? "#fff" : "var(--color-primary, #3b82f6)" }} />
         </div>
-        <div className="mt-1 flex justify-between">
-          <span className="text-[10px] opacity-60">{fmt(currentTime)}</span>
-          <span className="text-[10px] opacity-60">{fmt(duration)}</span>
-        </div>
+        <span className="shrink-0 text-label-sm tabular-nums opacity-70">{fmt(playing ? currentTime : duration)}</span>
       </div>
       <audio ref={audioRef} src={message.fileUrl} preload="metadata"
         onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
