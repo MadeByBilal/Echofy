@@ -53,24 +53,26 @@ const sendMessage = async (req, res) => {
       await message.save();
     }
 
-    // ── Send push notification to receiver ──
-    const body = text || (fileType === "image" ? "Sent an image" : fileUrl ? "Sent a file" : "New message");
-    const subscriptions = await PushSubscription.find({ userId: receiverId });
+    // ── Send push notification to receiver (if configured) ──
+    if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+      const body = text || (fileType === "image" ? "Sent an image" : fileUrl ? "Sent a file" : "New message");
+      const subscriptions = await PushSubscription.find({ userId: receiverId });
 
-    for (const sub of subscriptions) {
-      try {
-        await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: sub.keys },
-          JSON.stringify({
-            title: senderName,
-            body,
-            icon: "/favicon.ico",
-            data: { senderId: senderId.toString(), url: `/chat/${senderId}` },
-          }),
-        );
-      } catch (err) {
-        if (err.statusCode === 410 || err.statusCode === 404) {
-          await PushSubscription.findOneAndDelete({ endpoint: sub.endpoint });
+      for (const sub of subscriptions) {
+        try {
+          await webpush.sendNotification(
+            { endpoint: sub.endpoint, keys: sub.keys },
+            JSON.stringify({
+              title: senderName,
+              body,
+              icon: "/favicon.ico",
+              data: { senderId: senderId.toString(), url: `/chat/${senderId}` },
+            }),
+          );
+        } catch (err) {
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            await PushSubscription.findOneAndDelete({ endpoint: sub.endpoint });
+          }
         }
       }
     }

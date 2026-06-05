@@ -1,5 +1,4 @@
 const PushSubscription = require("../models/PushSubscription.model");
-const webpush = require("web-push");
 
 const subscribe = async (req, res) => {
   try {

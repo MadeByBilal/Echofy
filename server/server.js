@@ -15,11 +15,13 @@ const { initSocket, onlineUsers } = require("./socket/socket");
 
 dotenv.config();
 
-webpush.setVapidDetails(
-  "mailto:echofy@app.com",
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY,
-);
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    "mailto:echofy@app.com",
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY,
+  );
+}
 
 const app = express();
 const server = http.createServer(app);
