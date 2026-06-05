@@ -26,7 +26,9 @@ function ChatContent() {
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [replyTo, setReplyTo] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const bottomRef = useRef(null);
 
@@ -109,6 +111,44 @@ function ChatContent() {
   }, [user?._id]);
 
   const handleSend = async () => {
+    if ((!text.trim() && !selectedFile) || isSending || isUploading) return;
+
+    if (selectedFile) {
+      setIsUploading(true);
+      try {
+        const fileData = new FormData();
+        fileData.append("file", selectedFile);
+        const uploadRes = await axiosInstance.post("/messages/upload", fileData);
+        const { url, fileType, fileName, fileSize } = uploadRes.data;
+
+        const payload = {
+          receiverId: userId,
+          text: text.trim(),
+          fileUrl: url,
+          fileType,
+          fileName,
+          fileSize,
+          ...(replyTo && { replyTo: replyTo._id }),
+        };
+
+        setIsSending(true);
+        const res = await axiosInstance.post("/messages/send", payload);
+        const sentMessage = res.data.message;
+        if (replyTo) sentMessage.replyTo = replyTo;
+
+        setMessages((prev) => [...prev, sentMessage]);
+        setText("");
+        setSelectedFile(null);
+        setReplyTo(null);
+      } catch (err) {
+        console.log("Error sending file:", err);
+      } finally {
+        setIsSending(false);
+        setIsUploading(false);
+      }
+      return;
+    }
+
     const trimmed = text.trim();
     if (!trimmed || isSending) return;
 
@@ -139,6 +179,8 @@ function ChatContent() {
   const handleReply = (message) => setReplyTo(message);
   const cancelReply = () => setReplyTo(null);
   const handleTextChange = (value) => setText(value);
+  const handleFileSelect = (file) => setSelectedFile(file);
+  const handleFileClear = () => setSelectedFile(null);
 
   const handleKeyDown = (event) => {
     if (event.key !== "Enter" || event.shiftKey) return;
@@ -154,13 +196,17 @@ function ChatContent() {
       isLoading={isLoading}
       text={text}
       replyTo={replyTo}
-      isSending={isSending}
+      isSending={isSending || isUploading}
       bottomRef={bottomRef}
+      selectedFile={selectedFile}
+      isUploading={isUploading}
       onTextChange={handleTextChange}
       onSend={handleSend}
       onKeyDown={handleKeyDown}
       onReply={handleReply}
       onCancelReply={cancelReply}
+      onFileSelect={handleFileSelect}
+      onFileClear={handleFileClear}
       onBack={() => router.push("/chat")}
     />
   );

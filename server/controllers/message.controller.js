@@ -1,33 +1,40 @@
 const Message = require("../models/Message.model");
+const { uploadToCloudinary } = require("../utils/uploadImage");
 
 // SEND MESSAGE
 const sendMessage = async (req, res) => {
   try {
-    const { receiverId, text, replyTo } = req.body;
+    const { receiverId, text, replyTo, fileUrl, fileType, fileName, fileSize } = req.body;
     const senderId = req.user._id;
 
-    // check fields
-    if (!receiverId || !text) {
+    if (!receiverId) {
       return res
         .status(400)
-        .json({ message: "receiverId and text are required" });
+        .json({ message: "receiverId is required" });
     }
 
-    // save message to DB
+    if (!text && !fileUrl) {
+      return res
+        .status(400)
+        .json({ message: "text or fileUrl is required" });
+    }
+
     let message = await Message.create({
       senderId,
       receiverId,
-      text,
-      replyTo: replyTo || null, // if no replyTo, set null
+      text: text || "",
+      fileUrl: fileUrl || null,
+      fileType: fileType || null,
+      fileName: fileName || null,
+      fileSize: fileSize || null,
+      replyTo: replyTo || null,
     });
 
     message = await message.populate("replyTo", "text senderId");
 
-    // get socket stuff from app
     const io = req.app.get("io");
     const onlineUsers = req.app.get("onlineUsers");
 
-    // check if receiver is online (user may have multiple sockets)
     const receiverSocketIds = onlineUsers[receiverId];
 
     if (receiverSocketIds && receiverSocketIds.size > 0) {
@@ -35,7 +42,6 @@ const sendMessage = async (req, res) => {
         io.to(socketId).emit("receive_message", message);
       });
 
-      // update status to delivered
       message.status = "delivered";
       await message.save();
     }
@@ -49,17 +55,17 @@ const sendMessage = async (req, res) => {
 // GET CHAT HISTORY
 const getChatHistory = async (req, res) => {
   try {
-    const myId = req.user._id; // Get sender id from the body
-    const { userId } = req.params; // the other person's ID from url.
+    const myId = req.user._id;
+    const { userId } = req.params;
 
     const messages = await Message.find({
       $or: [
-        { senderId: myId, receiverId: userId }, // messages I sent
-        { senderId: userId, receiverId: myId }, // messages I received
+        { senderId: myId, receiverId: userId },
+        { senderId: userId, receiverId: myId },
       ],
     })
-      .populate("replyTo", "text senderId") // get original message if reply
-      .sort({ createdAt: 1 }); // oldest first
+      .populate("replyTo", "text senderId")
+      .sort({ createdAt: 1 });
 
     res.status(200).json({ messages });
   } catch (error) {
@@ -67,4 +73,26 @@ const getChatHistory = async (req, res) => {
   }
 };
 
-module.exports = { sendMessage, getChatHistory };
+// UPLOAD CHAT FILE
+const uploadChatFile = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, {
+      folder: "echofy/chat-files",
+    });
+
+    res.status(200).json({
+      url: result.secure_url,
+      fileType: result.resource_type === "image" ? "image" : "file",
+      fileName: req.file.originalname,
+      fileSize: req.file.size,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Upload failed", error: error.message });
+  }
+};
+
+module.exports = { sendMessage, getChatHistory, uploadChatFile };

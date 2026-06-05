@@ -40,11 +40,15 @@ export default function ChatWindow({
   replyTo,
   isSending,
   bottomRef,
+  selectedFile,
+  isUploading,
   onTextChange,
   onSend,
   onKeyDown,
   onReply,
   onCancelReply,
+  onFileSelect,
+  onFileClear,
   onBack,
 }) {
   const friendDisplayName = friend?.name || friend?.username || "Loading...";
@@ -167,6 +171,10 @@ export default function ChatWindow({
         replyTo={replyTo}
         replyAuthor={replyAuthor}
         onCancelReply={onCancelReply}
+        selectedFile={selectedFile}
+        isUploading={isUploading}
+        onFileSelect={onFileSelect}
+        onFileClear={onFileClear}
       />
     </div>
   );

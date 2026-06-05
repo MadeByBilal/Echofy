@@ -1,4 +1,5 @@
 const User = require('../models/User.model')
+const { uploadToCloudinary } = require('../utils/uploadImage')
 
 const searchByPhone = async (req, res) => {
   try {
@@ -58,4 +59,21 @@ const markLastSeen = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
-module.exports = { searchByPhone, updateProfile }
+
+const uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, {
+      folder: 'echofy/profile-pics',
+    });
+
+    res.status(200).json({ url: result.secure_url });
+  } catch (error) {
+    res.status(500).json({ message: 'Upload failed', error: error.message });
+  }
+}
+
+module.exports = { searchByPhone, updateProfile, markLastSeen, uploadImage }

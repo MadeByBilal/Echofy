@@ -62,6 +62,7 @@ function SetupContent() {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [pendingAvatar, setPendingAvatar] = useState(null);
   const [showBgPicker, setShowBgPicker] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
   const chatBg = useChatBackgroundStore((s) => s.bg);
   const setChatBg = useChatBackgroundStore((s) => s.setBg);
   const customColor = useChatBackgroundStore((s) => s.customColor);
@@ -360,6 +361,12 @@ function SetupContent() {
 
             <SettingsItem icon="help_center" title="Help & Support" />
             <SettingsItem
+              icon="info"
+              title="About Us"
+              subtitle="App info and credits"
+              onClick={() => setShowAbout(true)}
+            />
+            <SettingsItem
               icon="logout"
               title="Logout"
               danger
@@ -371,6 +378,33 @@ function SetupContent() {
         <div className="profile-footer-icon">
           <MaterialIcon name="architecture" style={{ fontSize: 48 }} />
         </div>
+
+        {showAbout && (
+          <div className="about-overlay" onClick={() => setShowAbout(false)}>
+            <div className="about-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="about-header">
+                <h2>About Echofy</h2>
+                <button className="icon-btn" onClick={() => setShowAbout(false)}>
+                  <MaterialIcon name="close" />
+                </button>
+              </div>
+              <div className="about-body">
+                <div className="about-logo">
+                  <MaterialIcon name="architecture" style={{ fontSize: 48 }} />
+                </div>
+                <p className="about-version">Version 1.0.0</p>
+                <p className="about-desc">
+                  Echofy is a real-time chat application built with Next.js, Node.js, and MongoDB.
+                  It features user authentication, friend management, and real-time messaging with Socket.IO.
+                </p>
+                <div className="about-divider" />
+                <p className="about-credit">
+                  Made with ❤️ by Bilal Dev
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
       <BottomNav />
     </div>

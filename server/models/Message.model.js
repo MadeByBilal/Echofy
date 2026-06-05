@@ -14,12 +14,28 @@ const messageSchema = new mongoose.Schema(
     },
     text: {
       type: String,
-      required: true,
+      default: "",
+    },
+    fileUrl: {
+      type: String,
+      default: null,
+    },
+    fileType: {
+      type: String,
+      default: null,
+    },
+    fileName: {
+      type: String,
+      default: null,
+    },
+    fileSize: {
+      type: Number,
+      default: null,
     },
     replyTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Message", // points to another message
-      default: null, // null means it's not a reply
+      ref: "Message",
+      default: null,
     },
     status: {
       type: String,
