@@ -1,8 +1,8 @@
 const Message = require("../models/Message.model");
 const User = require("../models/User.model");
 
-const onlineUsers = {}; // userId -> Set of socketIds
-const disconnectTimeouts = {}; // userId -> timeoutId
+const onlineUsers = {};
+const disconnectTimeouts = {};
 
 const OFFLINE_TIMEOUT = parseInt(process.env.OFFLINE_TIMEOUT_MS || "30000", 10);
 
@@ -10,30 +10,85 @@ const initSocket = (io) => {
   io.on("connection", (socket) => {
     console.log("Socket connected:", socket.id);
 
-    // ─── USER COMES ONLINE ───────────────────────────────────────
     socket.on("user_online", async (userId) => {
       if (!userId) return;
 
       try {
-        // track this socket
         if (!onlineUsers[userId]) onlineUsers[userId] = new Set();
         onlineUsers[userId].add(socket.id);
 
-        // cancel any pending offline timeout
         if (disconnectTimeouts[userId]) {
           clearTimeout(disconnectTimeouts[userId]);
           delete disconnectTimeouts[userId];
         }
 
-        // mark online in DB + broadcast
         await User.findByIdAndUpdate(userId, { isOnline: true });
         io.emit("user_status", { userId, isOnline: true });
         io.emit("online_users", Object.keys(onlineUsers));
 
-        // deliver any pending messages
         await deliverPendingMessages(io, userId);
       } catch (err) {
         console.log("user_online error:", err);
+      }
+    });
+
+    // ─── TYPING INDICATOR ───────────────────────────────────────
+    socket.on("typing", ({ receiverId, senderId }) => {
+      onlineUsers[receiverId]?.forEach((sid) => {
+        io.to(sid).emit("typing", { senderId });
+      });
+    });
+
+    socket.on("stop_typing", ({ receiverId, senderId }) => {
+      onlineUsers[receiverId]?.forEach((sid) => {
+        io.to(sid).emit("stop_typing", { senderId });
+      });
+    });
+
+    // ─── MESSAGE REACTION ───────────────────────────────────────
+    socket.on("message_reaction", async ({ messageId, emoji, userId, action }) => {
+      try {
+        const msg = await Message.findById(messageId);
+        if (!msg) return;
+
+        if (action === "add") {
+          const existing = msg.reactions.find(
+            (r) => r.userId.toString() === userId && r.emoji === emoji,
+          );
+          if (!existing) {
+            msg.reactions.push({ emoji, userId });
+          } else {
+            // toggle off if same emoji
+            msg.reactions.pull({ _id: existing._id });
+          }
+        } else {
+          msg.reactions.pull({ userId, emoji });
+        }
+
+        await msg.save();
+
+        const chatId = msg.groupId?.toString() || msg.senderId?.toString();
+        const targetId = msg.groupId?.toString() || msg.receiverId?.toString();
+
+        // notify both ends
+        const notifyIds = [msg.senderId?.toString(), msg.receiverId?.toString()];
+        notifyIds.forEach((id) => {
+          if (id) {
+            onlineUsers[id]?.forEach((sid) => {
+              io.to(sid).emit("reaction_updated", {
+                messageId,
+                reactions: msg.reactions,
+              });
+            });
+          }
+        });
+
+        // notify group members
+        if (msg.groupId) {
+          io.emit("reaction_updated", { messageId, reactions: msg.reactions });
+        }
+      } catch (err) {
+        console.log("reaction error:", err);
       }
     });
 
@@ -53,7 +108,6 @@ const initSocket = (io) => {
       }
     });
 
-    // ─── DISCONNECT ──────────────────────────────────────────────
     socket.on("disconnect", () => {
       const userId = Object.keys(onlineUsers).find((id) =>
         onlineUsers[id].has(socket.id),
@@ -63,15 +117,12 @@ const initSocket = (io) => {
 
       onlineUsers[userId].delete(socket.id);
 
-      // still has other tabs open — do nothing
       if (onlineUsers[userId].size > 0) return;
 
-      // last socket closed — remove immediately + broadcast
       delete onlineUsers[userId];
       io.emit("user_status", { userId, isOnline: false });
       io.emit("online_users", Object.keys(onlineUsers));
 
-      // delay DB write in case they reconnect fast
       disconnectTimeouts[userId] = setTimeout(async () => {
         try {
           await User.findByIdAndUpdate(userId, {
@@ -87,7 +138,6 @@ const initSocket = (io) => {
   });
 };
 
-// ─── HELPER ─────────────────────────────────────────────────────
 async function deliverPendingMessages(io, userId) {
   const messages = await Message.find({ receiverId: userId, status: "sent" });
   if (!messages.length) return;

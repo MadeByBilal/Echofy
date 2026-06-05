@@ -10,6 +10,7 @@ const userRoutes = require("./routes/user.routes");
 const friendRoutes = require("./routes/friend.routes");
 const messageRoutes = require("./routes/message.routes");
 const notificationRoutes = require("./routes/notification.routes");
+const groupRoutes = require("./routes/group.routes");
 const webpush = require("web-push");
 const { initSocket, onlineUsers } = require("./socket/socket");
 
@@ -58,6 +59,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/groups", groupRoutes);
 
 // init socket
 initSocket(io);

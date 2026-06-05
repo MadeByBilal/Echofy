@@ -10,7 +10,12 @@ const messageSchema = new mongoose.Schema(
     receiverId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      default: null,
+    },
+    groupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
     },
     text: {
       type: String,
@@ -42,6 +47,20 @@ const messageSchema = new mongoose.Schema(
       enum: ["sent", "delivered", "seen"],
       default: "sent",
     },
+    isEdited: {
+      type: Boolean,
+      default: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    reactions: [
+      {
+        emoji: { type: String, required: true },
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+      },
+    ],
   },
   { timestamps: true },
 );

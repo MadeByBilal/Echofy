@@ -1,8 +1,11 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { formatMessageTime } from "@/lib/formatTime";
 import MessageTicks from "./MessageTicks";
 import MaterialIcon from "@/components/ui/MaterialIcon";
+
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
 function formatFileSize(bytes) {
   if (!bytes) return "";
@@ -13,100 +16,169 @@ function formatFileSize(bytes) {
 
 function FilePreview({ message, isMe }) {
   const isImage = message.fileType === "image" || message.fileUrl?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
-
   if (isImage) {
     return (
-      <div className="mb-2 -mx-1 overflow-hidden rounded-xl">
-        <img
-          src={message.fileUrl}
-          alt={message.fileName || "Image"}
-          className="max-h-80 w-full cursor-pointer object-contain transition-transform hover:scale-[1.02]"
-          loading="lazy"
-        />
+      <div className="mb-2 -mx-3 mt-1 overflow-hidden rounded-xl">
+        <img src={message.fileUrl} alt={message.fileName || "Image"} className="max-h-80 w-full cursor-pointer object-contain transition-transform hover:scale-[1.02]" loading="lazy" />
       </div>
     );
   }
-
   return (
-    <a
-      href={message.fileUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`mb-2 flex items-center gap-3 rounded-xl p-3 transition-colors ${
-        isMe
-          ? "bg-white/10 hover:bg-white/15"
-          : "bg-surface-variant/30 hover:bg-surface-variant/50"
-      }`}
-    >
-      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-        isMe ? "bg-white/15" : "bg-surface-container-high"
-      }`}>
+    <a href={message.fileUrl} target="_blank" rel="noopener noreferrer" className={`mb-2 mt-1 flex items-center gap-3 rounded-xl p-3 transition-colors ${isMe ? "bg-white/10 hover:bg-white/15" : "bg-surface-variant/30 hover:bg-surface-variant/50"}`}>
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${isMe ? "bg-white/15" : "bg-surface-container-high"}`}>
         <MaterialIcon name="description" className="text-xl" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-body-md font-medium">
-          {message.fileName || "File"}
-        </p>
-        {message.fileSize && (
-          <p className="text-label-sm opacity-70">
-            {formatFileSize(message.fileSize)}
-          </p>
-        )}
+        <p className="truncate text-body-md font-medium">{message.fileName || "File"}</p>
+        {message.fileSize && <p className="text-label-sm opacity-70">{formatFileSize(message.fileSize)}</p>}
       </div>
       <MaterialIcon name="open_in_new" className="shrink-0 text-lg opacity-60" />
     </a>
   );
 }
 
-export default function ChatBubble({ message, isMe, onReply }) {
+export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, onDelete, onStartEdit, editingText, setEditingText, onSaveEdit, onCancelEdit }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
+  const menuRef = useRef(null);
+  const reactionRef = useRef(null);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false);
+      if (reactionRef.current && !reactionRef.current.contains(e.target)) setShowReactions(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   const timeLabel = formatMessageTime(message.createdAt);
   const hasFile = !!message.fileUrl;
+  const reactions = message.reactions || [];
+
+  // group reactions by emoji
+  const grouped = {};
+  reactions.forEach((r) => {
+    const id = typeof r.userId === "object" ? r.userId?._id : r.userId;
+    if (!grouped[r.emoji]) grouped[r.emoji] = [];
+    grouped[r.emoji].push(id);
+  });
 
   return (
-    <div
-      className={`w-fit max-w-[min(calc(100vw-3rem),20rem)] sm:max-w-[min(75%,24rem)] ${
-        isMe ? "self-end" : "self-start"
-      }`}
-    >
-      <div
-        className={`inline-block w-fit max-w-full rounded-2xl px-3 py-2 shadow-sm ${
-          isMe
+    <div className={`w-fit max-w-[min(calc(100vw-3rem),20rem)] sm:max-w-[min(75%,24rem)] ${isMe ? "self-end" : "self-start"}`}>
+      <div className="relative">
+        <div
+          className={`inline-block w-fit max-w-full rounded-2xl px-3 py-2 shadow-sm ${isMe
             ? "message-bubble-outgoing bg-primary text-on-primary shadow-md"
             : "message-bubble-incoming bg-surface-container-high text-on-surface"
-        }`}
-        onClick={() => onReply?.(message)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && onReply?.(message)}
-      >
-        {message.replyTo?.text && (
-          <div className="mb-2 max-w-full border-l-2 border-outline-variant/40 pl-3 opacity-90">
-            <span className="text-label-sm text-on-surface-variant">
-              Replying to
-            </span>
-            <p className="break-words text-body-md [overflow-wrap:anywhere]">
-              {message.replyTo.text}
-            </p>
-          </div>
-        )}
+          }`}
+        >
+          {message.replyTo?.text && (
+            <div className="mb-2 max-w-full border-l-2 border-outline-variant/40 pl-3 opacity-90">
+              <span className="text-label-sm text-on-surface-variant">Replying to</span>
+              <p className="break-words text-body-md [overflow-wrap:anywhere]">{message.replyTo.text}</p>
+            </div>
+          )}
 
-        {hasFile && <FilePreview message={message} isMe={isMe} />}
+          {hasFile && <FilePreview message={message} isMe={isMe} />}
 
-        {message.text && (
-          <div className="flex flex-wrap items-end gap-x-2 gap-y-0.5">
-            <p className="min-w-0 break-words text-body-md whitespace-pre-wrap [overflow-wrap:anywhere]">
-              {message.text}
-            </p>
-          </div>
-        )}
+          {onStartEdit && message._id === editingText?._id ? (
+            <div className="flex flex-col gap-2">
+              <input
+                type="text"
+                value={editingText?.text || ""}
+                onChange={(e) => setEditingText({ ...editingText, text: e.target.value })}
+                className="rounded-lg border border-outline-variant/40 bg-transparent px-3 py-2 text-body-md outline-none"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") onSaveEdit();
+                  if (e.key === "Escape") onCancelEdit();
+                }}
+              />
+              <div className="flex gap-2 self-end">
+                <button onClick={onCancelEdit} className="text-label-sm text-outline-variant hover:text-on-surface">Cancel</button>
+                <button onClick={onSaveEdit} className="text-label-sm font-semibold text-primary hover:text-on-primary">Save</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {message.text && (
+                <div className="flex flex-wrap items-end gap-x-2 gap-y-0.5">
+                  <p className="min-w-0 break-words text-body-md whitespace-pre-wrap [overflow-wrap:anywhere]">
+                    {message.text}
+                    {message.isEdited && <span className="ml-1 text-[10px] opacity-50">(edited)</span>}
+                  </p>
+                </div>
+              )}
 
-        <div className={`mt-1 flex items-center justify-end gap-1 ${
-          isMe ? "text-on-primary/65" : "text-on-surface-variant"
-        }`}>
-          <span className="text-[11px] leading-none">{timeLabel}</span>
-          {isMe && <MessageTicks status={message.status} />}
+              <div className="relative flex items-center justify-end gap-1">
+                <span className={`text-[11px] leading-none ${isMe ? "text-on-primary/65" : "text-on-surface-variant"}`}>{timeLabel}</span>
+                {isMe && <MessageTicks status={message.status} />}
+
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setShowMenu(v => !v); }}
+                  className={`ml-1 flex h-5 w-5 items-center justify-center rounded-full opacity-0 transition-opacity group-hover/msg:opacity-100 hover:bg-black/10 ${isMe ? "text-on-primary/50" : "text-on-surface-variant"}`}
+                >
+                  <MaterialIcon name="expand_more" className="text-sm" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
+
+        {/* Context Menu */}
+        {showMenu && (
+          <div ref={menuRef} className={`absolute z-50 w-44 overflow-hidden rounded-2xl border border-outline-variant/20 bg-surface-container-high py-1 shadow-2xl ${isMe ? "right-0" : "left-0"} top-0 -mt-1`}>
+            <button type="button" onClick={() => { onReply?.(message); setShowMenu(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-body-md text-on-surface transition-colors hover:bg-surface-container">
+              <MaterialIcon name="reply" className="text-outline text-lg" /> Reply
+            </button>
+            {reactions.length > 0 && (
+              <div className="border-t border-outline-variant/10 px-4 py-2">
+                <div className="flex gap-1.5 flex-wrap">
+                  {Object.entries(grouped).map(([emoji, users]) => (
+                    <button key={emoji} type="button" onClick={() => onReact?.(message, emoji)} className="flex items-center gap-1 rounded-full bg-surface-variant/50 px-2 py-0.5 text-sm">
+                      <span>{emoji}</span>
+                      <span className="text-[10px] text-outline">{users.length}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="border-t border-outline-variant/10" />
+            <div className="flex gap-1 px-4 py-2" ref={reactionRef}>
+              {REACTION_EMOJIS.map((emoji) => (
+                <button key={emoji} type="button" onClick={() => { onReact?.(message, emoji); setShowMenu(false); }} className="flex h-8 w-8 items-center justify-center rounded-full text-lg transition-transform hover:scale-125 active:scale-90">
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            <div className="border-t border-outline-variant/10" />
+            {isMe && (
+              <>
+                <button type="button" onClick={() => { onStartEdit?.(message); setShowMenu(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-body-md text-on-surface transition-colors hover:bg-surface-container">
+                  <MaterialIcon name="edit" className="text-outline text-lg" /> Edit
+                </button>
+                <button type="button" onClick={() => { if (confirm("Delete this message?")) { onDelete?.(message._id); } setShowMenu(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-body-md text-error transition-colors hover:bg-surface-container">
+                  <MaterialIcon name="delete" className="text-lg" /> Delete
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Reactions below bubble */}
+      {Object.keys(grouped).length > 0 && !showMenu && (
+        <div className={`-mt-1 flex gap-1 flex-wrap ${isMe ? "justify-end" : "justify-start"} px-1`}>
+          {Object.entries(grouped).map(([emoji, users]) => (
+            <button key={emoji} type="button" onClick={() => onReact?.(message, emoji)} className="flex items-center gap-1 rounded-full bg-surface-container-low px-2 py-0.5 text-sm shadow-sm">
+              <span>{emoji}</span>
+              <span className="text-[10px] text-outline">{users.length}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
