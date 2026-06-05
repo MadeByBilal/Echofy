@@ -52,7 +52,7 @@ export default function ChatInput({
   };
 
   return (
-    <footer className="safe-bottom shrink-0 bg-background p-inset-container">
+    <footer className="safe-bottom w-full shrink-0 bg-background p-inset-container">
       {replyTo && (
         <ReplyPreview
           replyAuthor={replyAuthor}
@@ -61,8 +61,8 @@ export default function ChatInput({
         />
       )}
 
-      <div className="relative flex items-center gap-3" ref={emojiRef}>
-        <div className="group flex flex-grow items-center rounded-full border border-surface-variant bg-surface-container-low px-4 py-2 transition-colors focus-within:border-outline">
+      <div className="relative flex min-w-0 items-center gap-2 sm:gap-3" ref={emojiRef}>
+        <div className="group flex min-w-0 flex-1 items-center rounded-full border border-surface-variant bg-surface-container-low px-3 py-2 transition-colors focus-within:border-outline">
           <button
             type="button"
             onClick={() => setShowEmoji((v) => !v)}
@@ -74,7 +74,7 @@ export default function ChatInput({
 
           <input
             type="text"
-            className="flex-grow border-none bg-transparent px-3 text-body-md text-on-surface outline-none placeholder:text-outline-variant focus:ring-0"
+            className="min-w-0 flex-1 border-none bg-transparent px-2 text-body-md text-on-surface outline-none placeholder:text-outline-variant focus:ring-0"
             placeholder="Type.."
             value={text}
             onChange={(e) => onTextChange(e.target.value)}

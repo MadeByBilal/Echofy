@@ -73,7 +73,7 @@ export default function ChatWindow({
   );
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-background text-on-background">
+    <div className="flex min-w-0 h-dvh flex-col overflow-hidden bg-background text-on-background">
       <header className="sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between bg-background px-margin-page">
         <div className="flex items-center gap-4">
           <button
@@ -96,17 +96,17 @@ export default function ChatWindow({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface transition-colors hover:bg-surface-container-high active:scale-95"
+            className="hidden sm:flex h-10 w-10 items-center justify-center rounded-full text-on-surface transition-colors hover:bg-surface-container-high active:scale-95"
             aria-label="Video call"
           >
             <MaterialIcon name="videocam" />
           </button>
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface transition-colors hover:bg-surface-container-high active:scale-95"
+            className="hidden sm:flex h-10 w-10 items-center justify-center rounded-full text-on-surface transition-colors hover:bg-surface-container-high active:scale-95"
             aria-label="Voice call"
           >
             <MaterialIcon name="call" />
