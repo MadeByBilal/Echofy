@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import useAuthStore from "@/store/authStore";
@@ -30,7 +29,6 @@ const testimonials = [
 ];
 
 export default function RegisterPage() {
-  const router = useRouter();
   const { register, isLoading, isAuthReady, user } = useAuthStore();
 
   const [formData, setFormData] = useState({
@@ -51,7 +49,7 @@ export default function RegisterPage() {
     setError("");
     try {
       await register(formData);
-      router.push("/setup");
+      window.location.href = "/setup";
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
     }
@@ -59,9 +57,9 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (user) {
-      router.replace("/chat");
+      window.location.href = "/chat";
     }
-  }, [user, router]);
+  }, [user]);
 
   const handleGoogleSignIn = () => {
     console.log("Google sign-in");
