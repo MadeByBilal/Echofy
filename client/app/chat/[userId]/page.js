@@ -128,6 +128,20 @@ function ChatContent() {
     } catch (err) { console.log(err); }
   }, []);
 
+  const handleVoiceSend = useCallback(async (audioFile) => {
+    setIsUploading(true);
+    try {
+      const fd = new FormData(); fd.append("file", audioFile);
+      const up = await axiosInstance.post("/messages/upload", fd);
+      const { url, fileType, fileName, fileSize } = up.data;
+      const payload = { receiverId: userId, fileUrl: url, fileType, fileName, fileSize };
+      const res = await axiosInstance.post("/messages/send", payload);
+      const m = res.data.message;
+      setMessages((prev) => [...prev, m]);
+    } catch (err) { console.log(err); }
+    finally { setIsUploading(false); }
+  }, [userId]);
+
   const handleSend = async () => {
     if ((!text.trim() && !selectedFile) || isSending || isUploading) return;
     clearTimeout(typingTimeout.current);
@@ -182,6 +196,7 @@ function ChatContent() {
       onTyping={handleTyping}
       onBack={() => router.push("/chat")}
       friendId={userId}
+      onVoiceSend={handleVoiceSend}
     />
   );
 }

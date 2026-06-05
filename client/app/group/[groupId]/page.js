@@ -53,6 +53,8 @@ function GroupChatContent() {
 
     const onMsg = (message) => {
       if (message.isDeleted || message.groupId !== groupId) return;
+      const sid = typeof message.senderId === "object" ? message.senderId._id : message.senderId;
+      if (sid === user?._id) return;
       setMessages((prev) => [...prev, message]);
     };
     const onDeleted = ({ messageId }) => setMessages((prev) => prev.filter((m) => m._id !== messageId));
@@ -92,6 +94,20 @@ function GroupChatContent() {
     try { await axiosInstance.patch("/messages/edit", { messageId: editingText._id, text: editingText.text.trim() }); setEditingText(null); } catch (e) { console.log(e); }
   }, [editingText]);
   const handleCancelEdit = useCallback(() => setEditingText(null), []);
+
+  const handleVoiceSend = useCallback(async (audioFile) => {
+    setIsUploading(true);
+    try {
+      const fd = new FormData(); fd.append("file", audioFile);
+      const up = await axiosInstance.post("/messages/upload", fd);
+      const { url, fileType, fileName, fileSize } = up.data;
+      const payload = { groupId, fileUrl: url, fileType, fileName, fileSize };
+      const res = await axiosInstance.post("/messages/send", payload);
+      const m = res.data.message;
+      setMessages((prev) => [...prev, m]);
+    } catch (err) { console.log(err); }
+    finally { setIsUploading(false); }
+  }, [groupId]);
 
   const handleSend = async () => {
     if ((!text.trim() && !selectedFile) || isSending || isUploading) return;
@@ -180,6 +196,7 @@ function GroupChatContent() {
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
         disabled={isSending} replyTo={replyTo} onCancelReply={() => setReplyTo(null)}
         selectedFile={selectedFile} isUploading={isUploading} onFileSelect={setSelectedFile} onFileClear={() => setSelectedFile(null)}
+        onVoiceSend={handleVoiceSend}
       />
     </div>
   );

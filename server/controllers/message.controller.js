@@ -50,9 +50,13 @@ const sendMessage = async (req, res) => {
       }
     }
 
-    // Deliver to group
+    // Deliver to group (exclude sender to avoid duplicates)
     if (groupId) {
-      io.emit("receive_message", payload);
+      Object.entries(onlineUsers).forEach(([uid, sockets]) => {
+        if (uid !== senderId.toString()) {
+          sockets.forEach((sid) => io.to(sid).emit("receive_message", payload));
+        }
+      });
       message.status = "delivered";
       await message.save();
     }

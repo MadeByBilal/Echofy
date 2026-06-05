@@ -14,8 +14,53 @@ function formatFileSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
+function AudioPreview({ message, isMe }) {
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef(null);
+
+  const toggle = () => {
+    if (!audioRef.current) return;
+    if (playing) { audioRef.current.pause(); setPlaying(false); }
+    else { audioRef.current.play(); setPlaying(true); }
+  };
+
+  const fmt = (s) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${String(sec).padStart(2, "0")}`;
+  };
+
+  return (
+    <div className={`mb-2 mt-1 flex items-center gap-3 rounded-xl p-2 ${isMe ? "bg-white/10" : "bg-surface-variant/30"}`}>
+      <button type="button" onClick={toggle} className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${isMe ? "bg-white/20" : "bg-primary/20"}`}>
+        <MaterialIcon name={playing ? "pause" : "play_arrow"} className={`text-xl ${isMe ? "text-white" : "text-primary"}`} />
+      </button>
+      <div className="flex-1">
+        <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/20">
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: duration ? `${(currentTime / duration) * 100}%` : "0%" }} />
+        </div>
+        <div className="mt-1 flex justify-between">
+          <span className="text-[10px] opacity-60">{fmt(currentTime)}</span>
+          <span className="text-[10px] opacity-60">{fmt(duration)}</span>
+        </div>
+      </div>
+      <audio ref={audioRef} src={message.fileUrl} preload="metadata"
+        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+        onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
+        onEnded={() => setPlaying(false)}
+      />
+    </div>
+  );
+}
+
 function FilePreview({ message, isMe }) {
+  const isAudio = message.fileType === "audio" || message.fileUrl?.match(/\.(webm|mp3|wav|ogg|m4a)$/i);
   const isImage = message.fileType === "image" || message.fileUrl?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
+
+  if (isAudio) return <AudioPreview message={message} isMe={isMe} />;
+
   if (isImage) {
     return (
       <div className="mb-2 -mx-3 mt-1 overflow-hidden rounded-xl">

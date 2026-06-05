@@ -27,7 +27,7 @@ export default function ChatWindow({
   onFileSelect, onFileClear,
   onReact, onEdit, onDelete,
   editingText, setEditingText, onSaveEdit, onCancelEdit,
-  onTyping, onBack, friendId,
+  onTyping, onVoiceSend, onBack, friendId,
 }) {
   const friendDisplayName = friend?.name || friend?.username || "Loading...";
   const isOwnMessage = (senderId) => senderId === user?._id || senderId?._id === user?._id;
@@ -100,6 +100,7 @@ export default function ChatWindow({
         replyTo={replyTo} replyAuthor={replyAuthor} onCancelReply={onCancelReply}
         selectedFile={selectedFile} isUploading={isUploading} onFileSelect={onFileSelect} onFileClear={onFileClear}
         onTyping={onTyping}
+        onVoiceSend={onVoiceSend}
       />
     </div>
   );
