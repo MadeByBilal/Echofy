@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blue Tick</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f7f7f7;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .message {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #e1ffc7;
+      color: #000;
+      padding: 14px 18px;
+      border-radius: 20px;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+      font-size: 16px;
+    }
+
+    .tick {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tick svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .toggle-button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 999px;
+      background: #008a7c;
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      transition: background 0.25s ease;
+    }
+
+    .toggle-button.active {
+      background: #e53935;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="message">
+      <span>Message sent</span>
+      <span class="tick" id="tickIcon1">
+        <svg viewBox="0 0 16 15" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.88a.32.32 0 0 1-.484.032l-.358-.325a.32.32 0 0 0-.484.032l-.378.48a.418.418 0 0 0 .036.54l1.32 1.267a.32.32 0 0 0 .484-.034l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.88a.32.32 0 0 1-.484.032L1.892 7.77a.366.366 0 0 0-.516.005l-.423.433a.364.364 0 0 0 .006.514l3.255 3.185a.32.32 0 0 0 .484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z" fill="#4fc3f7"/>
+        </svg>
+      </span>
+      <span class="tick" id="tickIcon2">
+        <svg viewBox="0 0 16 15" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.88a.32.32 0 0 1-.484.032l-.358-.325a.32.32 0 0 0-.484.032l-.378.48a.418.418 0 0 0 .036.54l1.32 1.267a.32.32 0 0 0 .484-.034l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.88a.32.32 0 0 1-.484.032L1.892 7.77a.366.366 0 0 0-.516.005l-.423.433a.364.364 0 0 0 .006.514l3.255 3.185a.32.32 0 0 0 .484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z" fill="#4fc3f7"/>
+        </svg>
+      </span>
+    </div>
+    <div class="button-row">
+      <button class="toggle-button" id="toggleButton">Toggle red</button>
+      <button class="toggle-button" id="tickCountButton">One tick</button>
+    </div>
+  </div>
+
+  <script>
+    const toggleButton = document.getElementById('toggleButton');
+    const tickCountButton = document.getElementById('tickCountButton');
+    const tickIcon2 = document.getElementById('tickIcon2');
+
+    toggleButton.addEventListener('click', () => {
+      toggleButton.classList.toggle('active');
+      const paths = document.querySelectorAll('.tick path');
+      const isRed = toggleButton.classList.contains('active');
+      paths.forEach(path => path.setAttribute('fill', isRed ? '#e53935' : '#4fc3f7'));
+    });
+
+    tickCountButton.addEventListener('click', () => {
+      const isOne = tickIcon2.style.display === 'none';
+      tickIcon2.style.display = isOne ? 'inline-flex' : 'none';
+      tickCountButton.textContent = isOne ? 'Two ticks' : 'One tick';
+    });
+  </script>
+</body>
+</html>

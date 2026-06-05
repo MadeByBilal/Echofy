@@ -1,21 +1,7 @@
 "use client";
 
 import { formatMessageTime } from "@/lib/formatTime";
-
-function MessageTicks({ status }) {
-  const ticks =
-    status === "seen" ? "✓✓" : status === "delivered" ? "✓✓" : "✓";
-
-  return (
-    <span
-      className={`text-[11px] leading-none ${
-        status === "seen" ? "text-blue-400" : "opacity-70"
-      }`}
-    >
-      {ticks}
-    </span>
-  );
-}
+import MessageTicks from "./MessageTicks";
 
 export default function ChatBubble({ message, isMe, onReply }) {
   const timeLabel = formatMessageTime(message.createdAt);

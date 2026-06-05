@@ -73,8 +73,8 @@ export default function ChatWindow({
   );
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background text-on-background">
-      <header className="z-30 flex h-16 w-full shrink-0 items-center justify-between bg-background px-margin-page">
+    <div className="flex h-dvh flex-col overflow-hidden bg-background text-on-background">
+      <header className="sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between bg-background px-margin-page">
         <div className="flex items-center gap-4">
           <button
             type="button"
