@@ -114,7 +114,7 @@ export default function ChatWindow({
         </div>
       </header>
 
-      <main className="no-scrollbar flex min-w-0 flex-grow flex-col gap-gutter-stack overflow-x-hidden overflow-y-auto px-margin-page py-6">
+      <main className="no-scrollbar flex min-w-0 flex-grow flex-col gap-gutter-stack overflow-x-hidden overflow-y-auto px-margin-page pt-6">
         {isLoading && (
           <p className="py-10 text-center text-body-md text-outline">
             Loading messages...

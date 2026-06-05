@@ -52,7 +52,7 @@ export default function ChatInput({
   };
 
   return (
-    <footer className="safe-bottom w-full shrink-0 bg-background p-inset-container">
+    <footer className="safe-bottom w-full shrink-0 bg-background px-inset-container pb-inset-container pt-2">
       {replyTo && (
         <ReplyPreview
           replyAuthor={replyAuthor}

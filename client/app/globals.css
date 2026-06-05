@@ -48,7 +48,6 @@
 body {
   font-family: var(--font-manrope), sans-serif;
   -webkit-tap-highlight-color: transparent;
-  min-height: max(884px, 100dvh);
 }
 
 .message-row:active {

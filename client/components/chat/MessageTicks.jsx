@@ -3,13 +3,15 @@
 export default function MessageTicks({ status }) {
   const single = status === "sent";
 
-  const color =
+  const cls =
     status === "seen"
       ? "text-blue-400"
-      : "text-white/50";
+      : single
+        ? "opacity-40"
+        : "opacity-70";
 
   return (
-    <span className={`inline-flex items-center ${color}`}>
+    <span className={`inline-flex items-center ${cls}`}>
       <svg
         viewBox="0 0 16 15"
         className="h-4 w-4"
