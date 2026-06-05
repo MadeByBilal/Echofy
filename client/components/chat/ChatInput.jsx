@@ -134,11 +134,19 @@ export default function ChatInput({
 
   const handleMicPointerDown = useCallback((e) => {
     e.preventDefault();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     startRecording();
   }, [startRecording]);
 
   const handleMicPointerUp = useCallback((e) => {
     e.preventDefault();
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    stopRecording();
+  }, [stopRecording]);
+
+  const handleMicPointerCancel = useCallback((e) => {
+    e.preventDefault();
+    cancelRef.current = true;
     stopRecording();
   }, [stopRecording]);
 
@@ -224,8 +232,9 @@ export default function ChatInput({
             type="button"
             onPointerDown={handleMicPointerDown}
             onPointerUp={handleMicPointerUp}
+            onPointerCancel={handleMicPointerCancel}
             onPointerLeave={handleMicPointerLeave}
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary shadow-lg shadow-white/5 transition-all duration-200 active:scale-95"
+            className="flex h-12 w-12 shrink-0 touch-none items-center justify-center rounded-full bg-primary text-on-primary shadow-lg shadow-white/5 transition-all duration-200 active:scale-95"
             aria-label="Hold to record"
           >
             {isUploading ? (
