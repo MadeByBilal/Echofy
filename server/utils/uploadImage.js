@@ -28,4 +28,17 @@ const uploadToCloudinary = (fileBuffer, options = {}) => {
   });
 };
 
-module.exports = { upload, uploadToCloudinary };
+const handleMulterError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({ message: "File too large — max 10MB" });
+    }
+    return res.status(400).json({ message: err.message });
+  }
+  if (err) {
+    return res.status(400).json({ message: err.message });
+  }
+  next();
+};
+
+module.exports = { upload, uploadToCloudinary, handleMulterError };

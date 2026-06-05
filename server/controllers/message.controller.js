@@ -1,4 +1,5 @@
 const Message = require("../models/Message.model");
+const User = require("../models/User.model");
 const { uploadToCloudinary } = require("../utils/uploadImage");
 
 // SEND MESSAGE
@@ -37,9 +38,13 @@ const sendMessage = async (req, res) => {
 
     const receiverSocketIds = onlineUsers[receiverId];
 
+    const sender = await User.findById(senderId).select("name username profilePic");
+    const senderName = sender?.name || sender?.username || "Someone";
+
     if (receiverSocketIds && receiverSocketIds.size > 0) {
+      const payload = { ...message.toObject(), senderName };
       receiverSocketIds.forEach((socketId) => {
-        io.to(socketId).emit("receive_message", message);
+        io.to(socketId).emit("receive_message", payload);
       });
 
       message.status = "delivered";

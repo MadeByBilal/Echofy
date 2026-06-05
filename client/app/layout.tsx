@@ -5,6 +5,7 @@ import { Manrope } from 'next/font/google'
 import { useEffect, type ReactNode } from 'react'
 import useAuthStore from '@/store/authStore'
 import usePresence from '@/hooks/usePresence'
+import useNotifications from '@/hooks/useNotifications'
 import './globals.css'
 
 const manrope = Manrope({
@@ -19,6 +20,7 @@ export default function RootLayout({
 }) {
   const { getMe } = useAuthStore()
   usePresence()
+  useNotifications()
 
   useEffect(() => {
     getMe()

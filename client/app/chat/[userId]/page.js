@@ -141,7 +141,8 @@ function ChatContent() {
         setSelectedFile(null);
         setReplyTo(null);
       } catch (err) {
-        console.log("Error sending file:", err);
+        const msg = err.response?.data?.message || "File upload failed";
+        alert(msg);
       } finally {
         setIsSending(false);
         setIsUploading(false);
