@@ -5,6 +5,7 @@ import socket from "@/lib/socket";
 const useAuthStore = create((set) => ({
   user: null,
   isLoading: false,
+  isAuthReady: false,
 
   register: async (data) => {
     set({ isLoading: true });
@@ -73,18 +74,16 @@ const useAuthStore = create((set) => ({
 
       if (!socket.connected) {
         socket.connect();
-        // ✅ wait for connection THEN emit
         socket.once("connect", () => {
           socket.emit("user_online", user._id);
         });
       } else {
-        // already connected (edge case), just emit
         socket.emit("user_online", user._id);
       }
 
-      set({ user });
+      set({ user, isAuthReady: true });
     } catch (error) {
-      set({ user: null });
+      set({ user: null, isAuthReady: true });
       console.log(error);
     }
   },

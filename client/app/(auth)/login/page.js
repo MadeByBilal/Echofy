@@ -30,7 +30,7 @@ const testimonials = [
 
 export default function SignInPage() {
   const router = useRouter();
-  const { login, isLoading, user } = useAuthStore();
+  const { login, isLoading, isAuthReady, user } = useAuthStore();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -79,6 +79,16 @@ export default function SignInPage() {
     // TODO: navigate to reset password page or open modal
     console.log("Reset password");
   };
+
+  if (!isAuthReady) {
+    return (
+      <div className="flex h-dvh items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (isAuthReady && user) return null;
 
   return (
     <div className="signin-container">

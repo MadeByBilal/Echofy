@@ -1,29 +1,8 @@
 import { NextResponse } from "next/server";
 
-// protected routes — must be logged in
-const protectedRoutes = ["/chat", "/friends", "/setup"];
-
-// auth routes — if logged in, can't go back here
-const authRoutes = ["/login", "/register"];
-
-export async function middleware(request) {
-  const token = request.cookies.get("token")?.value;
-  const path = request.nextUrl.pathname;
-
-  // if trying to access protected route without token
-  if (protectedRoutes.some((route) => path.startsWith(route))) {
-    if (!token) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-  }
-
-  // if already logged in, can't go to login/register
-  if (authRoutes.some((route) => path.startsWith(route))) {
-    if (token) {
-      return NextResponse.redirect(new URL("/chat", request.url));
-    }
-  }
-
+// Auth is handled client-side by ProtectedRoute and auth page guards.
+// Middleware only handles non-auth concerns (headers, redirects, etc.).
+export async function middleware() {
   return NextResponse.next();
 }
 

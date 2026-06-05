@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
 import usePresenceStore from "@/store/presenceStore";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import BottomNav from "@/components/ui/BottomNav";
 import socket from "@/lib/socket";
 import MaterialIcon from "@/components/ui/MaterialIcon";
@@ -58,6 +59,14 @@ function groupByLetter(friends) {
 }
 
 export default function FriendsPage() {
+  return (
+    <ProtectedRoute>
+      <FriendsContent />
+    </ProtectedRoute>
+  );
+}
+
+function FriendsContent() {
   const router = useRouter();
   const searchRef = useRef(null);
   const presence = usePresenceStore((s) => s.presence);

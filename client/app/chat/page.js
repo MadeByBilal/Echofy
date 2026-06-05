@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
 import usePresenceStore from "@/store/presenceStore";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import BottomNav from "@/components/ui/BottomNav";
 import MaterialIcon from "@/components/ui/MaterialIcon";
 import { formatLastMessageTime } from "@/lib/formatTime";
@@ -29,6 +30,14 @@ function FriendAvatar({ friend }) {
 }
 
 export default function ChatPage() {
+  return (
+    <ProtectedRoute>
+      <ChatContent />
+    </ProtectedRoute>
+  );
+}
+
+function ChatContent() {
   const router = useRouter();
   const [friends, setFriends] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

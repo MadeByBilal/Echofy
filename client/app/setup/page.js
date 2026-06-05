@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
 import useAuthStore from "@/store/authStore";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import BottomNav from "@/components/ui/BottomNav";
 import MaterialIcon from "@/components/ui/MaterialIcon";
 import "./profile.css";
@@ -40,6 +41,14 @@ function SettingsItem({ icon, title, subtitle, badge, danger, onClick }) {
 }
 
 export default function ProfilePage() {
+  return (
+    <ProtectedRoute>
+      <SetupContent />
+    </ProtectedRoute>
+  );
+}
+
+function SetupContent() {
   const router = useRouter();
   const fileInputRef = useRef(null);
   const { user, getMe, setUser, logout } = useAuthStore();

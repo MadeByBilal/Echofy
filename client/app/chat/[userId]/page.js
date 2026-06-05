@@ -4,10 +4,19 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
 import useAuthStore from "@/store/authStore";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import socket from "@/lib/socket";
 import ChatWindow from "@/components/chat/ChatWindow";
 
 export default function ChatPage() {
+  return (
+    <ProtectedRoute>
+      <ChatContent />
+    </ProtectedRoute>
+  );
+}
+
+function ChatContent() {
   const { userId } = useParams();
   const router = useRouter();
   const { user } = useAuthStore();

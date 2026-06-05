@@ -31,7 +31,7 @@ const testimonials = [
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, isLoading, user } = useAuthStore();
+  const { register, isLoading, isAuthReady, user } = useAuthStore();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -66,6 +66,16 @@ export default function RegisterPage() {
   const handleGoogleSignIn = () => {
     console.log("Google sign-in");
   };
+
+  if (!isAuthReady) {
+    return (
+      <div className="flex h-dvh items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (isAuthReady && user) return null;
 
   return (
     <div className="register-container">
