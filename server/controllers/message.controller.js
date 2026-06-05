@@ -1,5 +1,7 @@
 const Message = require("../models/Message.model");
 const User = require("../models/User.model");
+const PushSubscription = require("../models/PushSubscription.model");
+const webpush = require("web-push");
 const { uploadToCloudinary } = require("../utils/uploadImage");
 
 // SEND MESSAGE
@@ -49,6 +51,28 @@ const sendMessage = async (req, res) => {
 
       message.status = "delivered";
       await message.save();
+    }
+
+    // ── Send push notification to receiver ──
+    const body = text || (fileType === "image" ? "Sent an image" : fileUrl ? "Sent a file" : "New message");
+    const subscriptions = await PushSubscription.find({ userId: receiverId });
+
+    for (const sub of subscriptions) {
+      try {
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: sub.keys },
+          JSON.stringify({
+            title: senderName,
+            body,
+            icon: "/favicon.ico",
+            data: { senderId: senderId.toString(), url: `/chat/${senderId}` },
+          }),
+        );
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await PushSubscription.findOneAndDelete({ endpoint: sub.endpoint });
+        }
+      }
     }
 
     res.status(201).json({ message });

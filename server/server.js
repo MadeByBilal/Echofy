@@ -9,9 +9,17 @@ const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const friendRoutes = require("./routes/friend.routes");
 const messageRoutes = require("./routes/message.routes");
+const notificationRoutes = require("./routes/notification.routes");
+const webpush = require("web-push");
 const { initSocket, onlineUsers } = require("./socket/socket");
 
 dotenv.config();
+
+webpush.setVapidDetails(
+  "mailto:echofy@app.com",
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY,
+);
 
 const app = express();
 const server = http.createServer(app);
@@ -47,6 +55,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // init socket
 initSocket(io);
