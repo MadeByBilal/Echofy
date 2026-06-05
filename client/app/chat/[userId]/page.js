@@ -75,6 +75,12 @@ function ChatContent() {
 
     socket.on("receive_message", (message) => {
       setMessages((prev) => [...prev, message]);
+      if (message.senderId !== user?._id) {
+        socket.emit("messages_seen", {
+          senderId: message.senderId,
+          receiverId: user._id,
+        });
+      }
     });
 
     socket.on("messages_delivered", ({ messageIds }) => {

@@ -52,8 +52,8 @@ export default function ChatWindow({
 
   const friendId = friend?._id?.toString?.() || friend?._id;
   const presence = usePresenceStore((s) => s.presence[friendId]);
-  const isFriendOnline = presence?.isOnline ?? friend?.isOnline;
-  const lastSeen = presence?.lastSeen ?? friend?.lastSeen;
+  const isFriendOnline = presence?.isOnline ?? false;
+  const lastSeen = presence?.lastSeen;
 
   const statusLabel = isFriendOnline
     ? "Online"

@@ -121,14 +121,12 @@ function FriendsContent() {
 
   const isFriendOnline = (friend) => {
     const friendId = friend._id?.toString?.() || friend._id;
-    const friendPresence = presence[friendId];
-    return friendPresence?.isOnline ?? friend.isOnline ?? false;
+    return presence[friendId]?.isOnline ?? false;
   };
 
   const getLastSeen = (friend) => {
     const friendId = friend._id?.toString?.() || friend._id;
-    const friendPresence = presence[friendId];
-    return friendPresence?.lastSeen ?? friend.lastSeen;
+    return presence[friendId]?.lastSeen;
   };
 
   const { onlineFriends, offlineFriends } = useMemo(() => {

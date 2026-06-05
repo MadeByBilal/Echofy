@@ -138,9 +138,7 @@ function ChatContent() {
 
           {filteredFriends.map((friend) => {
             const friendId = friend._id?.toString?.() || friend._id;
-            const friendPresence = presence[friendId];
-            const isOnline =
-              friendPresence?.isOnline ?? friend.isOnline ?? false;
+            const isOnline = presence[friendId]?.isOnline ?? false;
             const lastMessageTime = friend.lastMessage?.createdAt;
             const isRecent =
               lastMessageTime &&
