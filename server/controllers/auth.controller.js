@@ -11,6 +11,11 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    const digitsOnly = phone.replace(/\D/g, "");
+    if (digitsOnly.length < 11) {
+      return res.status(400).json({ message: "Phone number must be at least 11 digits" });
+    }
+
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       return res.status(400).json({ message: "Username already taken" });
@@ -102,7 +107,12 @@ const getMe = async (req, res) => {
 };
 // LOGOUT THE USER
 const logout = async (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
   res.status(200).json({ message: "Logged out successfully" });
 };
 

@@ -47,6 +47,13 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    const digitsOnly = formData.phone.replace(/\D/g, "");
+    if (digitsOnly.length < 11) {
+      setError("Phone number must be at least 11 digits");
+      return;
+    }
+
     try {
       await register(formData);
       window.location.href = "/setup";

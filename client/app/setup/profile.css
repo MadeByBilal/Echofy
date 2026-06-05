@@ -100,7 +100,47 @@
 .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.06); color: var(--color-on-surface-variant, #c4c7c8); }
 .btn-small { font-size: 12px; padding: 6px 10px; }
 
-/* small responsive tweaks */
+.bg-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 16px 0;
+  max-width: 360px;
+}
+.bg-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  background: transparent;
+  border: 2px solid transparent;
+  cursor: pointer;
+  color: var(--color-on-surface-variant, #c4c7c8);
+  transition: background 0.14s, border-color 0.14s;
+}
+.bg-option:hover { background: var(--color-surface-container-high, #201f1f); }
+.bg-option.active { border-color: var(--color-primary, #ffffff); color: var(--color-on-surface, #e5e2e1); }
+.bg-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.bg-swatch.swatch-default {
+  background: var(--color-surface-container-low, #1c1b1b);
+}
+.bg-label { font-size: 11px; text-align: center; white-space: nowrap; }
+
+.bg-option:nth-child(1) .bg-swatch { background: linear-gradient(135deg, #2a1a1a, #1a0f0f); }
+.bg-option:nth-child(2) .bg-swatch { background: linear-gradient(135deg, #1c1c1c, #121212); }
+.bg-option:nth-child(3) .bg-swatch { background: linear-gradient(135deg, #0f1a2e, #0a101c); }
+.bg-option:nth-child(4) .bg-swatch { background: linear-gradient(135deg, #0f1f14, #0a140c); }
+.bg-option:nth-child(5) .bg-swatch { background: linear-gradient(135deg, #1e0f2e, #120a1c); }
+.bg-option:nth-child(6) .bg-swatch { background: linear-gradient(135deg, #2a1a0f, #1a0f0a); }
+.bg-option:nth-child(7) .bg-swatch { background: linear-gradient(135deg, #0f1f1f, #0a1414); }
+
 @media (max-width: 768px) {
   .profile-main { padding: 20px; }
   .avatar-wrapper { width: 96px; height: 96px; }

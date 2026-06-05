@@ -7,6 +7,7 @@ import useAuthStore from "@/store/authStore";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import BottomNav from "@/components/ui/BottomNav";
 import MaterialIcon from "@/components/ui/MaterialIcon";
+import useChatBackgroundStore, { BACKGROUNDS } from "@/store/chatBackgroundStore";
 import "./profile.css";
 
 function SettingsItem({ icon, title, subtitle, badge, danger, onClick }) {
@@ -60,6 +61,9 @@ function SetupContent() {
   const [formData, setFormData] = useState({ name: "", bio: "" });
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [pendingAvatar, setPendingAvatar] = useState(null);
+  const [showBgPicker, setShowBgPicker] = useState(false);
+  const chatBg = useChatBackgroundStore((s) => s.bg);
+  const setChatBg = useChatBackgroundStore((s) => s.setBg);
 
   useEffect(() => {
     getMe();
@@ -297,6 +301,30 @@ function SetupContent() {
               subtitle="Customize push and email alerts"
               badge="OFF"
             />
+            <SettingsItem
+              icon="palette"
+              title="Chat Background"
+              subtitle="Change message area background"
+              onClick={() => setShowBgPicker(!showBgPicker)}
+            />
+
+            {showBgPicker && (
+              <div className="bg-picker-grid">
+                {Object.keys(BACKGROUNDS).map((key) => (
+                  <button
+                    key={key}
+                    className={`bg-option ${chatBg === key ? "active" : ""}`}
+                    onClick={() => {
+                      setChatBg(key);
+                      setShowBgPicker(false);
+                    }}
+                  >
+                    <span className={`bg-swatch ${key === "default" ? "swatch-default" : ""}`} />
+                    <span className="bg-label">{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="settings-title" style={{ marginTop: 24 }}>
               Support

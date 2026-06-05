@@ -6,6 +6,7 @@ import usePresenceStore from "@/store/presenceStore";
 import { formatLastSeen, formatDateSeparator, groupMessagesWithDates } from "@/lib/formatTime";
 import ChatBubble from "./ChatBubble";
 import ChatInput from "./ChatInput";
+import useChatBackgroundStore, { BACKGROUNDS } from "@/store/chatBackgroundStore";
 
 function FriendHeaderAvatar({ friend, online }) {
   const initial = (friend?.name || friend?.username || "?")[0].toUpperCase();
@@ -54,6 +55,8 @@ export default function ChatWindow({
   const presence = usePresenceStore((s) => s.presence[friendId]);
   const isFriendOnline = presence?.isOnline ?? false;
   const lastSeen = presence?.lastSeen;
+  const chatBgKey = useChatBackgroundStore((s) => s.bg);
+  const chatBgClass = BACKGROUNDS[chatBgKey] || "";
 
   const statusLabel = isFriendOnline
     ? "Online"
@@ -114,7 +117,7 @@ export default function ChatWindow({
         </div>
       </header>
 
-      <main className="no-scrollbar flex min-w-0 flex-grow flex-col gap-gutter-stack overflow-x-hidden overflow-y-auto px-margin-page pt-6">
+      <main className={`no-scrollbar flex min-w-0 flex-grow flex-col gap-gutter-stack overflow-x-hidden overflow-y-auto px-margin-page pt-6 ${chatBgClass}`}>
         {isLoading && (
           <p className="py-10 text-center text-body-md text-outline">
             Loading messages...
