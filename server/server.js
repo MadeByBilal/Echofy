@@ -3,7 +3,6 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const http = require("http");
-const mongoose = require("mongoose");
 const { Server } = require("socket.io");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
@@ -61,8 +60,8 @@ app.use(cookieParser());
 
 connectDB();
 
-app.get("/", (req, res) => res.json({ status: "ok", service: "echofy-api" }));
-app.get("/health", (req, res) => res.json({ status: "ok", db: mongoose.connection.readyState === 1 ? "connected" : "disconnected" }));
+// Test Route
+app.get("/health", (req, res) => res.status(200).json({ status: "ok" }));
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
