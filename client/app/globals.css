@@ -122,3 +122,10 @@ body {
 .animate-slide-down {
   animation: slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+.bg-whatsapp-pattern {
+  background-image: url(/whatappbackground.png);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}

@@ -5,7 +5,7 @@ const CUSTOM_COLOR_KEY = "chatBgCustom";
 
 const BACKGROUNDS = {
   default: { bg: "", swatch: "#1c1b1b" },
-  whatsapp: { bg: "", swatch: "#1c1b1b" },
+  whatsapp: { bg: "bg-whatsapp-pattern", swatch: "#1c1b1b" },
   pink: { bg: "bg-gradient-to-br from-[#3a1420] via-[#2a0f18] to-[#1a0a10]", swatch: "#d6487a" },
   gray: { bg: "bg-gradient-to-br from-[#2a2a2a] via-[#1e1e1e] to-[#141414]", swatch: "#889096" },
   blue: { bg: "bg-gradient-to-br from-[#0f1f3a] via-[#0c1628] to-[#080e1a]", swatch: "#4a7ed6" },
