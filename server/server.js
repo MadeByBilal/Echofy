@@ -29,7 +29,7 @@ const server = http.createServer(app);
 const allowedOrigins = (
   process.env.CORS_ORIGINS ||
   "http://localhost:3001,https://echofy20.vercel.app/"
-).split(",").map((s) => s.trim().replace(/\/+$/, ""));
+).split(",");
 
 const io = new Server(server, {
   cors: {
@@ -42,16 +42,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true);
-      const normalised = origin.replace(/\/+$/, "");
-      const allowed = allowedOrigins.some((o) => normalised === o);
-      if (allowed) return cb(null, true);
-      if (process.env.CORS_ORIGINS) {
-        return cb(new Error("Not allowed by CORS"));
-      }
-      cb(null, true);
-    },
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
