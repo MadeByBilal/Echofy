@@ -108,6 +108,17 @@
 
 .avatar-file-input { display: none; }
 
+.avatar-clickable { width: 100%; height: 100%; position: relative; cursor: pointer; }
+.avatar-clickable img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar-edit-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.45); opacity: 0; transition: opacity 0.2s ease;
+  border-radius: 50%; color: white;
+}
+.avatar-edit-overlay .material-symbols-outlined { font-size: 28px; }
+.avatar-clickable:hover .avatar-edit-overlay { opacity: 1; }
+@media (hover: none) { .avatar-edit-overlay { opacity: 1; background: rgba(0,0,0,0.3); } }
+
 /* small buttons used in requests list */
 .btn { display:inline-flex; align-items:center; justify-content:center; border-radius: 999px; padding: 6px 10px; font-weight:700; cursor:pointer; border:none; }
 .btn-primary { background: var(--color-primary, #ffffff); color: var(--color-on-primary, #2f3131); }

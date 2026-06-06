@@ -199,20 +199,28 @@ function SetupContent() {
 
         <section className="avatar-section">
           <div className="avatar-wrapper">
-            {avatarPreview ? (
-              <img src={avatarPreview} alt={displayName} />
-            ) : (
-              <div className="avatar-initial">{avatarInitial}</div>
-            )}
-
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="change-photo-btn"
-              aria-label="Change photo"
-            >
-              <MaterialIcon name="photo_camera" />
-            </button>
+            <div className="avatar-clickable" onClick={() => fileInputRef.current?.click()}>
+              {avatarPreview ? (
+                <>
+                  <img src={avatarPreview} alt={displayName} />
+                  <div className="avatar-edit-overlay">
+                    <MaterialIcon name="edit" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="avatar-initial">{avatarInitial}</div>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                    className="change-photo-btn"
+                    aria-label="Add photo"
+                  >
+                    <MaterialIcon name="photo_camera" />
+                  </button>
+                </>
+              )}
+            </div>
 
             <input
               ref={fileInputRef}

@@ -157,7 +157,7 @@ export default function ChatInput({
   const showMic = !text.trim() && !selectedFile && !replyTo;
 
   return (
-    <footer className="safe-bottom w-full shrink-0 bg-background px-inset-container pb-inset-container pt-2">
+    <footer className="safe-bottom w-full shrink-0 bg-background/60 backdrop-blur-lg px-inset-container pb-inset-container pt-2 shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
       {replyTo && <ReplyPreview replyAuthor={replyAuthor} text={replyTo.text} onCancel={onCancelReply} />}
 
       {selectedFile && (

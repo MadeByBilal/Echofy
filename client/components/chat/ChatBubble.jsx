@@ -37,7 +37,7 @@ function AudioPreview({ message, isMe }) {
 
   return (
     <div className="mb-1 mt-1 flex items-center gap-3">
-      <button type="button" onClick={toggle} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isMe ? "bg-white/20 text-white" : "bg-primary text-on-primary"} transition-transform active:scale-90`}>
+      <button type="button" onClick={(e) => { e.stopPropagation(); toggle(); }} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isMe ? "bg-black/15 text-on-primary" : "bg-primary text-on-primary"} transition-transform active:scale-90`}>
         <MaterialIcon name={playing ? "pause" : "play_arrow"} filled className="text-xl" />
       </button>
       <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -86,11 +86,12 @@ export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, on
   const [showMenu, setShowMenu] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const menuRef = useRef(null);
+  const bubbleRef = useRef(null);
   const reactionRef = useRef(null);
 
   useEffect(() => {
     function handleClick(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false);
+      if (menuRef.current && !menuRef.current.contains(e.target) && !bubbleRef.current?.contains(e.target)) setShowMenu(false);
       if (reactionRef.current && !reactionRef.current.contains(e.target)) setShowReactions(false);
     }
     document.addEventListener("mousedown", handleClick);
@@ -110,10 +111,12 @@ export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, on
   });
 
   return (
-    <div className={`w-fit max-w-[min(calc(100vw-3rem),20rem)] sm:max-w-[min(75%,24rem)] ${isMe ? "self-end" : "self-start"}`}>
+    <div className={`w-fit max-w-[min(calc(100vw-3rem),22rem)] sm:max-w-[min(75%,28rem)] ${isMe ? "self-end" : "self-start"}`}>
       <div className="relative">
         <div
-          className={`inline-block w-fit max-w-full rounded-2xl px-3 py-2 shadow-sm ${isMe
+          ref={bubbleRef}
+          onClick={() => { if (editingText?._id === message._id) return; setShowMenu(v => !v); }}
+          className={`inline-block w-fit max-w-full cursor-pointer rounded-2xl px-4 py-3 shadow-sm ${isMe
             ? "message-bubble-outgoing bg-primary text-on-primary shadow-md"
             : "message-bubble-incoming bg-surface-container-high text-on-surface"
           }`}
@@ -121,7 +124,7 @@ export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, on
           {message.replyTo?.text && (
             <div className="mb-2 max-w-full border-l-2 border-outline-variant/40 pl-3 opacity-90">
               <span className="text-label-sm text-on-surface-variant">Replying to</span>
-              <p className="break-words text-body-md [overflow-wrap:anywhere]">{message.replyTo.text}</p>
+              <p className="break-words text-[15px] leading-relaxed [overflow-wrap:anywhere]">{message.replyTo.text}</p>
             </div>
           )}
 
@@ -149,24 +152,16 @@ export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, on
             <>
               {message.text && (
                 <div className="flex flex-wrap items-end gap-x-2 gap-y-0.5">
-                  <p className="min-w-0 break-words text-body-md whitespace-pre-wrap [overflow-wrap:anywhere]">
+                  <p className="min-w-0 break-words text-[15px] leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">
                     {message.text}
                     {message.isEdited && <span className="ml-1 text-[10px] opacity-50">(edited)</span>}
                   </p>
                 </div>
               )}
 
-              <div className="relative flex items-center justify-end gap-1">
-                <span className={`text-[11px] leading-none ${isMe ? "text-on-primary/65" : "text-on-surface-variant"}`}>{timeLabel}</span>
+              <div className="relative mt-1 flex items-center justify-end gap-1">
+                <span className={`text-[12px] leading-none ${isMe ? "text-on-primary/65" : "text-on-surface-variant"}`}>{timeLabel}</span>
                 {isMe && <MessageTicks status={message.status} />}
-
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setShowMenu(v => !v); }}
-                  className={`ml-1 flex h-5 w-5 items-center justify-center rounded-full opacity-0 transition-opacity group-hover/msg:opacity-100 hover:bg-black/10 ${isMe ? "text-on-primary/50" : "text-on-surface-variant"}`}
-                >
-                  <MaterialIcon name="expand_more" className="text-sm" />
-                </button>
               </div>
             </>
           )}
@@ -174,7 +169,7 @@ export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, on
 
         {/* Context Menu */}
         {showMenu && (
-          <div ref={menuRef} className={`absolute z-50 w-44 overflow-hidden rounded-2xl border border-outline-variant/20 bg-surface-container-high py-1 shadow-2xl ${isMe ? "right-0" : "left-0"} top-0 -mt-1`}>
+          <div ref={menuRef} onClick={(e) => e.stopPropagation()} className={`absolute z-50 w-44 overflow-hidden rounded-2xl border border-outline-variant/20 bg-surface-container-high py-1 shadow-2xl ${isMe ? "right-0" : "left-0"} top-full mt-2`}>
             <button type="button" onClick={() => { onReply?.(message); setShowMenu(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-body-md text-on-surface transition-colors hover:bg-surface-container">
               <MaterialIcon name="reply" className="text-outline text-lg" /> Reply
             </button>
