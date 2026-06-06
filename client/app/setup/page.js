@@ -63,6 +63,9 @@ function SetupContent() {
   const [pendingAvatar, setPendingAvatar] = useState(null);
   const [showBgPicker, setShowBgPicker] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [notificationsOn, setNotificationsOn] = useState(false);
   const chatBg = useChatBackgroundStore((s) => s.bg);
   const setChatBg = useChatBackgroundStore((s) => s.setBg);
   const customColor = useChatBackgroundStore((s) => s.customColor);
@@ -305,13 +308,21 @@ function SetupContent() {
               icon="verified_user"
               title="Privacy"
               subtitle="Manage visibility and data sharing"
+              onClick={() => setShowPrivacy(true)}
             />
-            <SettingsItem
-              icon="notifications"
-              title="Notifications"
-              subtitle="Customize push and email alerts"
-              badge="OFF"
-            />
+            <div className="settings-item">
+              <div className="settings-item-icon">
+                <MaterialIcon name="notifications" className="settings-icon" />
+              </div>
+              <div className="settings-item-content">
+                <p className="settings-item-title">Notifications</p>
+                <p className="settings-item-subtitle">Push and email alerts</p>
+              </div>
+              <label className="toggle-switch">
+                <input type="checkbox" checked={notificationsOn} onChange={(e) => setNotificationsOn(e.target.checked)} />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
             <SettingsItem
               icon="palette"
               title="Chat Background"
@@ -367,7 +378,7 @@ function SetupContent() {
               Support
             </div>
 
-            <SettingsItem icon="help_center" title="Help & Support" />
+            <SettingsItem icon="help_center" title="Help & Support" subtitle="Get help or contact us" onClick={() => setShowHelp(true)} />
             <SettingsItem
               icon="info"
               title="About Us"
@@ -387,6 +398,78 @@ function SetupContent() {
           <MaterialIcon name="architecture" style={{ fontSize: 48 }} />
         </div>
 
+        {showPrivacy && (
+          <div className="about-overlay" onClick={() => setShowPrivacy(false)}>
+            <div className="about-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="about-header">
+                <h2>Privacy & Security</h2>
+                <button className="icon-btn" onClick={() => setShowPrivacy(false)}>
+                  <MaterialIcon name="close" />
+                </button>
+              </div>
+              <div className="about-body" style={{ textAlign: 'left', alignItems: 'flex-start' }}>
+                <div className="about-logo" style={{ alignSelf: 'center' }}>
+                  <MaterialIcon name="verified_user" style={{ fontSize: 48 }} />
+                </div>
+                <p className="about-desc" style={{ maxWidth: '100%', fontSize: 13, lineHeight: 1.7 }}>
+                  <strong>Your privacy matters to us.</strong> We use end-to-end encryption to protect your messages, so only you and the person you're talking to can read them — not even we can.
+                </p>
+                <p className="about-desc" style={{ maxWidth: '100%', fontSize: 13, lineHeight: 1.7 }}>
+                  Your password is securely hashed and never stored in plain text. We follow industry best practices to keep your account safe.
+                </p>
+                <p className="about-desc" style={{ maxWidth: '100%', fontSize: 13, lineHeight: 1.7 }}>
+                  To maintain a safe community, we monitor visit activity for suspicious behavior. This helps us detect and prevent unauthorized access, spam, and abuse.
+                </p>
+                <p className="about-desc" style={{ maxWidth: '100%', fontSize: 13, lineHeight: 1.7 }}>
+                  Your trust is our priority. We are committed to protecting your data and being transparent about how it is used.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showHelp && (
+          <div className="about-overlay" onClick={() => setShowHelp(false)}>
+            <div className="about-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="about-header">
+                <h2>Help & Support</h2>
+                <button className="icon-btn" onClick={() => setShowHelp(false)}>
+                  <MaterialIcon name="close" />
+                </button>
+              </div>
+              <div className="about-body" style={{ textAlign: 'left', alignItems: 'flex-start' }}>
+                <div className="about-logo" style={{ alignSelf: 'center' }}>
+                  <MaterialIcon name="help_center" style={{ fontSize: 48 }} />
+                </div>
+                <p className="about-desc" style={{ maxWidth: '100%', fontSize: 13, lineHeight: 1.7 }}>
+                  Having a problem? Feel free to reach out to me anytime. I'll get back to you as soon as I can.
+                </p>
+                <div className="contact-row">
+                  <MaterialIcon name="mail" className="contact-icon" />
+                  <div>
+                    <p className="contact-label">Email</p>
+                    <p className="contact-value">bilal.dev121@gmail.com</p>
+                  </div>
+                </div>
+                <div className="contact-row">
+                  <MaterialIcon name="alternate_email" className="contact-icon" />
+                  <div>
+                    <p className="contact-label">Discord</p>
+                    <p className="contact-value">bilal.prime2.0</p>
+                  </div>
+                </div>
+                <div className="contact-row">
+                  <MaterialIcon name="call" className="contact-icon" />
+                  <div>
+                    <p className="contact-label">Phone</p>
+                    <p className="contact-value">03291035406</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showAbout && (
           <div className="about-overlay" onClick={() => setShowAbout(false)}>
             <div className="about-modal" onClick={(e) => e.stopPropagation()}>
@@ -402,12 +485,11 @@ function SetupContent() {
                 </div>
                 <p className="about-version">Version 1.0.0</p>
                 <p className="about-desc">
-                  Echofy is a real-time chat application built with Next.js, Node.js, and MongoDB.
-                  It features user authentication, friend management, and real-time messaging with Socket.IO.
+                  Echofy is a simple and fast chat app. I'm passionate about building great experiences and I keep updating Echofy with new features to make it better for everyone.
                 </p>
                 <div className="about-divider" />
                 <p className="about-credit">
-                  Made with ❤️ by Bilal Dev
+                  Developer — Bilal Dev
                 </p>
               </div>
             </div>

@@ -54,6 +54,11 @@ function ChatInput({
   const streamRef = useRef(null);
   const micRef = useRef(null);
   const cancelRef = useRef(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     function handleClick(e) {
@@ -188,7 +193,7 @@ function ChatInput({
         <div className="group flex min-w-0 flex-1 items-center rounded-full border border-surface-variant bg-surface-container-low px-3 py-2 transition-colors focus-within:border-outline">
           <button type="button" onClick={() => setShowEmoji(v => !v)} className="p-1 text-outline transition-colors hover:text-on-surface" aria-label="Emoji"><MaterialIcon name="mood" /></button>
 
-          <input type="text" className="min-w-0 flex-1 border-none bg-transparent px-2 text-body-md text-on-surface outline-none placeholder:text-outline-variant focus:ring-0" placeholder="Type a message.." value={text} onChange={(e) => handleTextInput(e.target.value)} onKeyDown={onKeyDown} disabled={disabled} />
+          <input ref={inputRef} type="text" className="min-w-0 flex-1 border-none bg-transparent px-2 text-body-md text-on-surface outline-none placeholder:text-outline-variant focus:ring-0" placeholder="Type a message.." value={text} onChange={(e) => handleTextInput(e.target.value)} onKeyDown={onKeyDown} disabled={disabled} />
 
           <div className="flex items-center gap-1 relative" ref={actionsRef}>
             <button type="button" onClick={() => setShowActions(v => !v)} className="p-1 text-outline transition-colors hover:text-on-surface" aria-label="Attach"><MaterialIcon name="attach_file" /></button>

@@ -2,30 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import useAuthStore from "@/store/authStore";
 import "./login.css";
-
-const testimonials = [
-  {
-    avatarSrc: "https://randomuser.me/api/portraits/women/57.jpg",
-    name: "Sarah Chen",
-    handle: "@sarahdigital",
-    text: "Amazing platform! The user experience is seamless and the features are exactly what I needed.",
-  },
-  {
-    avatarSrc: "https://randomuser.me/api/portraits/men/64.jpg",
-    name: "Marcus Johnson",
-    handle: "@marcustech",
-    text: "This service has transformed how I work. Clean design, powerful features, and excellent support.",
-  },
-  {
-    avatarSrc: "https://randomuser.me/api/portraits/men/32.jpg",
-    name: "David Martinez",
-    handle: "@davidcreates",
-    text: "I've tried many platforms, but this one stands out. Intuitive, reliable, and genuinely helpful for productivity.",
-  },
-];
 
 export default function SignInPage() {
   const { login, isLoading, isAuthReady, user } = useAuthStore();
@@ -247,7 +225,7 @@ export default function SignInPage() {
         </div>
       </section>
 
-      {/* Right side – Hero + testimonials */}
+      {/* Right side – Hero */}
       <section className="signin-right">
         <div
           className="hero-image animate-slide-right animate-delay-300"
@@ -258,35 +236,6 @@ export default function SignInPage() {
           role="img"
           aria-label="Decorative hero background"
         />
-
-        {testimonials.length > 0 && (
-          <div className="testimonials-strip">
-            {testimonials.map((testimonial, index) => {
-              const cardClass = `testimonial-card testimonial-card-${index + 1}`;
-              const delayClass = `animate-delay-${1000 + index * 200}`;
-              return (
-                <div
-                  key={index}
-                  className={`${cardClass} animate-testimonial ${delayClass}`}
-                >
-                  <Image
-                    className="testimonial-avatar"
-                    src="/vercel.svg"
-                    width={10}
-                    height={10}
-                    alt="avatar"
-                    loading="lazy"
-                  />
-                  <div className="testimonial-content">
-                    <p className="testimonial-name">{testimonial.name}</p>
-                    <p className="testimonial-handle">{testimonial.handle}</p>
-                    <p className="testimonial-text">{testimonial.text}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </section>
     </div>
   );
