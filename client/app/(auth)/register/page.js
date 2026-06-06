@@ -28,26 +28,26 @@ const testimonials = [
   },
 ];
 
-function CountrySelector({ selected, onSelect, parentRef }) {
+function CountrySelector({ selected, onSelect }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
   const [search, setSearch] = useState("");
+  const triggerRef = useRef(null);
 
   useEffect(() => {
     function handleClick(e) {
-      if (e.target.closest(".country-selector-wrapper")) return;
-      setOpen(false);
+      if (triggerRef.current && !triggerRef.current.contains(e.target)) {
+        setOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   const openDropdown = () => {
-    const el = parentRef?.current;
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      const w = Math.min(rect.width, 320);
-      setPos({ top: rect.bottom + 4, left: rect.left, width: w });
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 4, left: rect.left, width: 300 });
     }
     setOpen(true);
   };
@@ -64,7 +64,7 @@ function CountrySelector({ selected, onSelect, parentRef }) {
   }, [search]);
 
   return (
-    <div className="country-selector-wrapper">
+    <div className="country-selector-wrapper" ref={triggerRef}>
       <button
         type="button"
         className="country-selector-trigger"
@@ -117,8 +117,6 @@ function CountrySelector({ selected, onSelect, parentRef }) {
 export default function RegisterPage() {
   const { register, isLoading, isAuthReady, user } = useAuthStore();
 
-  const phoneWrapperRef = useRef(null);
-
   const [formData, setFormData] = useState({
     username: "",
     phone: "",
@@ -153,7 +151,7 @@ export default function RegisterPage() {
       });
       window.location.href = "/setup";
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Something went wrong");
+      setError(err.response?.data?.message || "Something went wrong");
     }
   };
 
@@ -214,11 +212,10 @@ export default function RegisterPage() {
 
             <div className="form-field animate-element animate-delay-400">
               <label className="form-label">Phone Number</label>
-              <div className="glass-input-wrapper phone-input-wrapper" ref={phoneWrapperRef}>
+              <div className="glass-input-wrapper phone-input-wrapper">
                 <CountrySelector
                   selected={selectedCountry}
                   onSelect={setSelectedCountry}
-                  parentRef={phoneWrapperRef}
                 />
                 <input
                   id="phone"
