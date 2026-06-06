@@ -1,4 +1,5 @@
 const express = require("express");
+// Server started
 const dotenv = require("dotenv");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
