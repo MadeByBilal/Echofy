@@ -36,8 +36,6 @@ export default function RootLayout({
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap"
           rel="stylesheet"
-          media="print"
-          onLoad={(e) => { e.currentTarget.media = 'all'; }}
         />
       </head>
       <body
