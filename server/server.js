@@ -26,9 +26,10 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
 
 const app = express();
 const server = http.createServer(app);
+//fix url
 const allowedOrigins = (
   process.env.CORS_ORIGINS ||
-  "http://localhost:3001,https://echofy20.vercel.app/"
+  "http://localhost:3001,https://echofy1.vercel.app/"
 ).split(",");
 
 const io = new Server(server, {
