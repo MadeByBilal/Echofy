@@ -124,12 +124,13 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
-    const digits = formData.phone.replace(/\D/g, "");
-    const validationError = validatePhone(digits, selectedCountry);
-    if (validationError) {
-      setError(validationError);
+    let digits = formData.phone.replace(/\D/g, "");
+    const result = validatePhone(digits, selectedCountry);
+    if (result.error) {
+      setError(result.error);
       return;
     }
+    if (result.digits) digits = result.digits;
 
     try {
       await register({

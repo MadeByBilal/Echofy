@@ -129,18 +129,20 @@ export default function SignInPage() {
     e.preventDefault();
     setError("");
 
+    let phoneDigits = "";
     if (loginMethod === "phone") {
-      const digits = formData.phone.replace(/\D/g, "");
-      const validationError = validatePhone(digits, selectedCountry);
-      if (validationError) {
-        setError(validationError);
+      phoneDigits = formData.phone.replace(/\D/g, "");
+      const result = validatePhone(phoneDigits, selectedCountry);
+      if (result.error) {
+        setError(result.error);
         return;
       }
+      if (result.digits) phoneDigits = result.digits;
     }
 
     try {
       const payload = loginMethod === "phone"
-        ? { username: formData.phone.replace(/\D/g, ""), password: formData.password, loginType: "phone" }
+        ? { username: phoneDigits, password: formData.password, loginType: "phone" }
         : { username: formData.username, password: formData.password };
 
       await login(payload);

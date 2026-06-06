@@ -46,19 +46,28 @@ export function getCountryByCode(code) {
 }
 
 export function validatePhone(phone, country) {
-  const digits = phone.replace(/\D/g, "");
-  if (!digits) return "Phone number is required";
+  let digits = phone.replace(/\D/g, "");
+  if (!digits) return { error: "Phone number is required" };
+
+  // If 1 digit short and prepending "0" would match, do it
+  // (user sees +92 prefix and types 3001234567 instead of 03001234567)
+  if (digits.length === country.length - 1) {
+    const withZero = "0" + digits;
+    const validStart = country.startsWith.length === 0 || country.startsWith.some((s) => withZero.startsWith(s));
+    if (validStart) digits = withZero;
+  }
+
   if (digits.length !== country.length) {
-    return `Phone must be ${country.length} digits for ${country.name}`;
+    return { error: `Phone must be ${country.length} digits for ${country.name}` };
   }
   if (country.startsWith.length > 0) {
     const valid = country.startsWith.some((s) => digits.startsWith(s));
     if (!valid) {
       const prefixes = country.startsWith.join(", ");
-      return `Phone must start with ${prefixes} for ${country.name}`;
+      return { error: `Phone must start with ${prefixes} for ${country.name}` };
     }
   }
-  return null;
+  return { error: null, digits };
 }
 
 export function formatPhoneWithPrefix(phone, country) {

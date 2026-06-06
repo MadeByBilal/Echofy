@@ -49,7 +49,15 @@ function validatePhoneByCountry(phone, countryCode) {
   const country = COUNTRIES[countryCode];
   if (!country) return "Invalid country code";
 
-  const digits = phone.replace(/\D/g, "");
+  let digits = phone.replace(/\D/g, "");
+  if (!digits) return "Phone number is required";
+
+  if (digits.length === country.length - 1) {
+    const withZero = "0" + digits;
+    const validStart = country.startsWith.length === 0 || country.startsWith.some((s) => withZero.startsWith(s));
+    if (validStart) digits = withZero;
+  }
+
   if (digits.length !== country.length) {
     return `Phone must be ${country.length} digits for this country`;
   }
@@ -70,12 +78,17 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const digitsOnly = phone.replace(/\D/g, "");
+    let digitsOnly = phone.replace(/\D/g, "");
 
     if (country) {
       const validationError = validatePhoneByCountry(digitsOnly, country);
       if (validationError) {
         return res.status(400).json({ message: validationError });
+      }
+      // Re-parse after validation in case leading 0 was added
+      digitsOnly = phone.replace(/\D/g, "");
+      if (digitsOnly.length === COUNTRIES[country].length - 1) {
+        digitsOnly = "0" + digitsOnly;
       }
     } else {
       if (digitsOnly.length < 5) {
