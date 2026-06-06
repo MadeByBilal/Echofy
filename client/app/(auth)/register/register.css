@@ -375,8 +375,6 @@
   display: flex;
   align-items: center;
   padding: 0;
-  overflow: visible !important;
-  position: relative;
 }
 
 .phone-input-wrapper input {
@@ -392,7 +390,6 @@
 }
 
 .country-selector-wrapper {
-  position: static;
   flex-shrink: 0;
 }
 
@@ -434,12 +431,8 @@
   transform: rotate(180deg);
 }
 
-.phone-input-wrapper .country-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
+.country-dropdown {
   z-index: 9999;
-  width: 300px;
   max-height: 320px;
   background: #1a1a24;
   border: 1px solid rgba(255, 255, 255, 0.12);

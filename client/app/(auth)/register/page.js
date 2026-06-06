@@ -30,16 +30,27 @@ const testimonials = [
 
 function CountrySelector({ selected, onSelect }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
   const [search, setSearch] = useState("");
-  const ref = useRef(null);
+  const triggerRef = useRef(null);
 
   useEffect(() => {
     function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (triggerRef.current && !triggerRef.current.contains(e.target)) {
+        setOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  const openDropdown = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 4, left: rect.left, width: 300 });
+    }
+    setOpen(true);
+  };
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -53,11 +64,11 @@ function CountrySelector({ selected, onSelect }) {
   }, [search]);
 
   return (
-    <div ref={ref} className="country-selector-wrapper">
+    <div className="country-selector-wrapper" ref={triggerRef}>
       <button
         type="button"
         className="country-selector-trigger"
-        onClick={() => setOpen(!open)}
+        onClick={openDropdown}
       >
         <span className="country-flag">{getFlag(selected.code)}</span>
         <span className="country-code">+{selected.prefix}</span>
@@ -66,7 +77,7 @@ function CountrySelector({ selected, onSelect }) {
         </svg>
       </button>
       {open && (
-        <div className="country-dropdown">
+        <div className="country-dropdown" style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}>
           <div className="country-search-wrapper">
             <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
