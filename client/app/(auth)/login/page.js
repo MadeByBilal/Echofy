@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import useAuthStore from "@/store/authStore";
-import { countries, validatePhone, getFlag, getCountryByCode } from "@/lib/countries";
 import "./login.css";
 
 const testimonials = [
@@ -28,103 +27,14 @@ const testimonials = [
   },
 ];
 
-function CountrySelector({ selected, onSelect }) {
-  const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
-  const [search, setSearch] = useState("");
-  const triggerRef = useRef(null);
-
-  useEffect(() => {
-    function handleClick(e) {
-      if (triggerRef.current && !triggerRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const openDropdown = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPos({ top: rect.bottom + 4, left: rect.left, width: 300 });
-    }
-    setOpen(true);
-  };
-
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    if (!q) return countries;
-    return countries.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.code.toLowerCase().includes(q) ||
-        c.prefix.includes(q),
-    );
-  }, [search]);
-
-  return (
-    <div className="country-selector-wrapper" ref={triggerRef}>
-      <button
-        type="button"
-        className="country-selector-trigger"
-        onClick={openDropdown}
-      >
-        <span className="country-flag">{getFlag(selected.code)}</span>
-        <span className="country-code">+{selected.prefix}</span>
-        <svg className={`chevron ${open ? "open" : ""}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-      {open && (
-        <div className="country-dropdown" style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}>
-          <div className="country-search-wrapper">
-            <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              className="country-search-input"
-              placeholder="Search country..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autoFocus
-            />
-          </div>
-          <div className="country-list">
-            {filtered.map((c) => (
-              <button
-                key={c.code}
-                type="button"
-                className={`country-option ${c.code === selected.code ? "active" : ""}`}
-                onClick={() => { onSelect(c); setOpen(false); setSearch(""); }}
-              >
-                <span className="country-flag">{getFlag(c.code)}</span>
-                <span className="country-name">{c.name}</span>
-                <span className="country-dial-code">+{c.prefix}</span>
-              </button>
-            ))}
-            {filtered.length === 0 && (
-              <p className="no-results">No countries found</p>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function SignInPage() {
   const { login, isLoading, isAuthReady, user } = useAuthStore();
 
-  const [loginMethod, setLoginMethod] = useState("username");
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    phone: "",
     rememberMe: false,
   });
-  const [selectedCountry, setSelectedCountry] = useState(getCountryByCode("PK"));
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -140,23 +50,8 @@ export default function SignInPage() {
     e.preventDefault();
     setError("");
 
-    let phoneDigits = "";
-    if (loginMethod === "phone") {
-      phoneDigits = formData.phone.replace(/\D/g, "");
-      const result = validatePhone(phoneDigits, selectedCountry);
-      if (result.error) {
-        setError(result.error);
-        return;
-      }
-      if (result.digits) phoneDigits = result.digits;
-    }
-
     try {
-      const payload = loginMethod === "phone"
-        ? { username: phoneDigits, password: formData.password, loginType: "phone" }
-        : { username: formData.username, password: formData.password };
-
-      await login(payload);
+      await login({ username: formData.username, password: formData.password });
       window.location.href = "/chat";
     } catch (err) {
       setError(
@@ -207,72 +102,23 @@ export default function SignInPage() {
             </p>
           )}
 
-          <div className="login-method-toggle animate-element animate-delay-250">
-            <button
-              type="button"
-              className={`method-btn ${loginMethod === "username" ? "active" : ""}`}
-              onClick={() => setLoginMethod("username")}
-            >
-              Username
-            </button>
-            <button
-              type="button"
-              className={`method-btn ${loginMethod === "phone" ? "active" : ""}`}
-              onClick={() => setLoginMethod("phone")}
-            >
-              Phone
-            </button>
-          </div>
-
           <form className="signin-form" onSubmit={handleSubmit} noValidate>
-            {loginMethod === "username" ? (
-              <div className="form-field animate-element animate-delay-300">
-                <label className="form-label" htmlFor="username">
-                  Username
-                </label>
-                <div className="glass-input-wrapper">
-                  <input
-                    id="username"
-                    name="username"
-                    type="text"
-                    placeholder="Enter your username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+            <div className="form-field animate-element animate-delay-300">
+              <label className="form-label" htmlFor="username">
+                Username
+              </label>
+              <div className="glass-input-wrapper">
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  placeholder="Enter your username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  required
+                />
               </div>
-            ) : (
-              <div className="form-field animate-element animate-delay-300">
-                <label className="form-label">Phone Number</label>
-                <div className="glass-input-wrapper phone-input-wrapper">
-                  <CountrySelector
-                    selected={selectedCountry}
-                    onSelect={setSelectedCountry}
-                  />
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="Enter phone number"
-                    value={formData.phone}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "");
-                      setFormData((prev) => ({ ...prev, phone: val }));
-                    }}
-                    maxLength={selectedCountry.length}
-                    required
-                  />
-                </div>
-                {selectedCountry && (
-                  <p className="phone-hint">
-                    +{selectedCountry.prefix} · {selectedCountry.length} digits
-                    {selectedCountry.startsWith.length > 0 &&
-                      ` · starts with ${selectedCountry.startsWith.join(", ")}`}
-                  </p>
-                )}
-              </div>
-            )}
+            </div>
 
             <div className="form-field animate-element animate-delay-400">
               <label className="form-label" htmlFor="password">

@@ -28,26 +28,26 @@ const testimonials = [
   },
 ];
 
-function CountrySelector({ selected, onSelect }) {
+function CountrySelector({ selected, onSelect, parentRef }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
   const [search, setSearch] = useState("");
-  const triggerRef = useRef(null);
 
   useEffect(() => {
     function handleClick(e) {
-      if (triggerRef.current && !triggerRef.current.contains(e.target)) {
-        setOpen(false);
-      }
+      if (e.target.closest(".country-selector-wrapper")) return;
+      setOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
   const openDropdown = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPos({ top: rect.bottom + 4, left: rect.left, width: 300 });
+    const el = parentRef?.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const w = Math.min(rect.width, 320);
+      setPos({ top: rect.bottom + 4, left: rect.left, width: w });
     }
     setOpen(true);
   };
@@ -64,7 +64,7 @@ function CountrySelector({ selected, onSelect }) {
   }, [search]);
 
   return (
-    <div className="country-selector-wrapper" ref={triggerRef}>
+    <div className="country-selector-wrapper">
       <button
         type="button"
         className="country-selector-trigger"
@@ -117,6 +117,8 @@ function CountrySelector({ selected, onSelect }) {
 export default function RegisterPage() {
   const { register, isLoading, isAuthReady, user } = useAuthStore();
 
+  const phoneWrapperRef = useRef(null);
+
   const [formData, setFormData] = useState({
     username: "",
     phone: "",
@@ -151,7 +153,7 @@ export default function RegisterPage() {
       });
       window.location.href = "/setup";
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong");
+      setError(err.response?.data?.message || err.message || "Something went wrong");
     }
   };
 
@@ -212,10 +214,11 @@ export default function RegisterPage() {
 
             <div className="form-field animate-element animate-delay-400">
               <label className="form-label">Phone Number</label>
-              <div className="glass-input-wrapper phone-input-wrapper">
+              <div className="glass-input-wrapper phone-input-wrapper" ref={phoneWrapperRef}>
                 <CountrySelector
                   selected={selectedCountry}
                   onSelect={setSelectedCountry}
+                  parentRef={phoneWrapperRef}
                 />
                 <input
                   id="phone"
