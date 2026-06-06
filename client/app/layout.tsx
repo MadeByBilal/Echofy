@@ -2,6 +2,7 @@
 
 import { Manrope } from 'next/font/google'
 
+import { GoogleAnalytics } from '@next/third-parties/google'
 import { useEffect, type ReactNode } from 'react'
 import useAuthStore from '@/store/authStore'
 import usePresence from '@/hooks/usePresence'
@@ -44,6 +45,7 @@ export default function RootLayout({
       >
         {children}
         <NotificationToast />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID!} />
       </body>
     </html>
   )
