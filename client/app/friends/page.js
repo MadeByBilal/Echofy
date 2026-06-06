@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
 import usePresenceStore from "@/store/presenceStore";
+import useFriendStore from "@/store/friendStore";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import BottomNav from "@/components/ui/BottomNav";
 import socket from "@/lib/socket";
@@ -71,6 +72,12 @@ function FriendsContent() {
   const searchRef = useRef(null);
   const presence = usePresenceStore((s) => s.presence);
 
+  const friends = useFriendStore((s) => s.friends);
+  const incomingRequests = useFriendStore((s) => s.incomingRequests);
+  const fetchFriends = useFriendStore((s) => s.fetchFriends);
+  const fetchIncomingRequests = useFriendStore((s) => s.fetchIncomingRequests);
+  const removeIncomingRequest = useFriendStore((s) => s.removeIncomingRequest);
+
   const [phone, setPhone] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -78,19 +85,16 @@ function FriendsContent() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [requestSent, setRequestSent] = useState(false);
-  const [friends, setFriends] = useState([]);
-  const [incomingRequests, setIncomingRequests] = useState([]);
 
   useEffect(() => {
-    fetchIncomingRequests();
     fetchFriends();
+    fetchIncomingRequests();
   }, []);
 
   useEffect(() => {
     if (!socket) return;
 
-    const handleFriendRequest = (payload) => {
-      // re-fetch incoming requests so data is populated the same way as the API
+    const handleFriendRequest = () => {
       fetchIncomingRequests();
       setSuccess("New friend request");
     };
@@ -100,24 +104,6 @@ function FriendsContent() {
       socket.off("friend_request", handleFriendRequest);
     };
   }, []);
-
-  const fetchIncomingRequests = async () => {
-    try {
-      const res = await axiosInstance.get("/friends/requests");
-      setIncomingRequests(res.data.requests || []);
-    } catch (err) {
-      console.log("Error fetching requests:", err);
-    }
-  };
-
-  const fetchFriends = async () => {
-    try {
-      const res = await axiosInstance.get("/friends");
-      setFriends(res.data.friends || []);
-    } catch (err) {
-      console.log("Error fetching friends:", err);
-    }
-  };
 
   const isFriendOnline = (friend) => {
     const friendId = friend._id?.toString?.() || friend._id;
@@ -156,9 +142,9 @@ function FriendsContent() {
   const handleRespond = async (requestId, action) => {
     try {
       await axiosInstance.patch("/friends/respond", { requestId, action });
-      setIncomingRequests((prev) => prev.filter((r) => r._id !== requestId));
+      removeIncomingRequest(requestId);
       setSuccess(action === "accepted" ? "Friend added!" : "Request rejected");
-      if (action === "accepted") fetchFriends();
+      if (action === "accepted") fetchFriends(true);
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
     }

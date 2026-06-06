@@ -28,6 +28,7 @@ export default function ChatWindow({
   onReact, onEdit, onDelete,
   editingText, setEditingText, onSaveEdit, onCancelEdit,
   onTyping, onVoiceSend, onBack, friendId,
+  onRetry,
 }) {
   const friendDisplayName = friend?.name || friend?.username || "Loading...";
   const isOwnMessage = (senderId) => senderId === user?._id || senderId?._id === user?._id;
@@ -68,7 +69,6 @@ export default function ChatWindow({
         </div>
       </header>
 
-      {/* Inline search */}
       <div className="px-margin-page pb-2">
         <input id="msg-search" type="text" placeholder="Search messages..." className="w-full rounded-xl border border-surface-variant bg-surface-container-low px-4 py-2 text-body-md text-on-surface outline-none placeholder:text-outline-variant hidden" />
       </div>
@@ -89,6 +89,7 @@ export default function ChatWindow({
               key={item.key} message={msg} isMe={isOwnMessage(msg.senderId)} onReply={onReply}
               onReact={onReact} onDelete={onDelete}
               onStartEdit={onEdit} editingText={editingText} setEditingText={setEditingText} onSaveEdit={onSaveEdit} onCancelEdit={onCancelEdit}
+              onRetry={onRetry}
             />
           );
         })}

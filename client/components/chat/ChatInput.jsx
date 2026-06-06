@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import MaterialIcon from "@/components/ui/MaterialIcon";
 import ReplyPreview from "./ReplyPreview";
 
@@ -32,7 +32,7 @@ function formatTimer(ms) {
   return `${min}:${String(sec % 60).padStart(2, "0")}`;
 }
 
-export default function ChatInput({
+function ChatInput({
   text, onTextChange, onSend, onKeyDown, disabled,
   replyTo, replyAuthor, onCancelReply,
   selectedFile, onFileSelect, onFileClear, isUploading,
@@ -157,7 +157,7 @@ export default function ChatInput({
   const showMic = !text.trim() && !selectedFile && !replyTo;
 
   return (
-    <footer className="safe-bottom w-full shrink-0 bg-background/60 backdrop-blur-lg px-inset-container pb-inset-container pt-2 shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
+    <footer className="safe-bottom w-full shrink-0 px-inset-container pb-inset-container pt-2">
       {replyTo && <ReplyPreview replyAuthor={replyAuthor} text={replyTo.text} onCancel={onCancelReply} />}
 
       {selectedFile && (
@@ -257,3 +257,5 @@ export default function ChatInput({
     </footer>
   );
 }
+
+export default memo(ChatInput);

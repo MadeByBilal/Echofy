@@ -61,29 +61,28 @@ const sendMessage = async (req, res) => {
       await message.save();
     }
 
-    // Push notification
+    res.status(201).json({ message: payload });
+
+    // Push notification (fire-and-forget — don't block response)
     if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && receiverId) {
       const body = text || (fileType === "image" ? "Sent an image" : fileUrl ? "Sent a file" : "New message");
-      const subscriptions = await PushSubscription.find({ userId: receiverId });
-      for (const sub of subscriptions) {
-        try {
-          await webpush.sendNotification(
+      PushSubscription.find({ userId: receiverId }).then((subscriptions) => {
+        for (const sub of subscriptions) {
+          webpush.sendNotification(
             { endpoint: sub.endpoint, keys: sub.keys },
             JSON.stringify({
               title: senderName, body,
               icon: "/favicon.ico",
               data: { senderId: senderId.toString(), url: `/chat/${senderId}` },
             }),
-          );
-        } catch (err) {
-          if (err.statusCode === 410 || err.statusCode === 404) {
-            await PushSubscription.findOneAndDelete({ endpoint: sub.endpoint });
-          }
+          ).catch((err) => {
+            if (err.statusCode === 410 || err.statusCode === 404) {
+              PushSubscription.findOneAndDelete({ endpoint: sub.endpoint }).catch(() => {});
+            }
+          });
         }
-      }
+      }).catch(() => {});
     }
-
-    res.status(201).json({ message: payload });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

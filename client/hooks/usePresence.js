@@ -1,24 +1,43 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import socket from "@/lib/socket";
 import usePresenceStore from "@/store/presenceStore";
 
 export default function usePresence() {
   const setPresence = usePresenceStore((s) => s.setPresence);
+  const batchRef = useRef({});
+  const timerRef = useRef(null);
 
   useEffect(() => {
     if (!socket) return;
 
+    const flushBatch = () => {
+      const batch = batchRef.current;
+      batchRef.current = {};
+      timerRef.current = null;
+      const store = usePresenceStore.getState();
+      const merged = { ...store.presence, ...batch };
+      usePresenceStore.setState({ presence: merged });
+    };
+
     const handleUserStatus = ({ userId, isOnline, lastSeen }) => {
-      setPresence(userId, {
+      batchRef.current[userId] = {
         isOnline,
         lastSeen: lastSeen ? new Date(lastSeen) : null,
-      });
+      };
+      if (!timerRef.current) {
+        timerRef.current = requestAnimationFrame(flushBatch);
+      }
     };
 
     const handleOnlineUsers = (list) => {
-      list.forEach((id) => setPresence(id, { isOnline: true, lastSeen: null }));
+      const batch = {};
+      list.forEach((id) => { batch[id] = { isOnline: true, lastSeen: null }; });
+      batchRef.current = { ...batchRef.current, ...batch };
+      if (!timerRef.current) {
+        timerRef.current = requestAnimationFrame(flushBatch);
+      }
     };
 
     socket.on("user_status", handleUserStatus);
@@ -27,6 +46,7 @@ export default function usePresence() {
     return () => {
       socket.off("user_status", handleUserStatus);
       socket.off("online_users", handleOnlineUsers);
+      if (timerRef.current) cancelAnimationFrame(timerRef.current);
     };
   }, [setPresence]);
 }

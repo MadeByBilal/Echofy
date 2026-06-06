@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import axiosInstance from "@/lib/axiosInstance";
 import usePresenceStore from "@/store/presenceStore";
+import useChatStore from "@/store/chatStore";
+import useAuthStore from "@/store/authStore";
+import socket from "@/lib/socket";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import BottomNav from "@/components/ui/BottomNav";
 import MaterialIcon from "@/components/ui/MaterialIcon";
@@ -31,26 +33,50 @@ export default function ChatPage() {
 
 function ChatContent() {
   const router = useRouter();
-  const [friends, setFriends] = useState([]);
-  const [groups, setGroups] = useState([]);
+  const { user } = useAuthStore();
+  const presence = usePresenceStore((s) => s.presence);
+  const friends = useChatStore((s) => s.friends);
+  const groups = useChatStore((s) => s.groups);
+  const fetchChatList = useChatStore((s) => s.fetchChatList);
+  const updateFriendLastMessage = useChatStore((s) => s.updateFriendLastMessage);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const presence = usePresenceStore((s) => s.presence);
+  const [now, setNow] = useState(() => Date.now());
+  const mounted = useRef(false);
 
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const [fRes, gRes] = await Promise.all([
-          axiosInstance.get("/friends"),
-          axiosInstance.get("/groups/my"),
-        ]);
-        setFriends(fRes.data.friends || []);
-        setGroups(gRes.data.groups || []);
-      } catch (err) { console.log(err); }
-      finally { setIsLoading(false); }
-    };
-    fetch();
+    if (!mounted.current) {
+      fetchChatList(true).finally(() => setIsLoading(false));
+      mounted.current = true;
+    } else {
+      fetchChatList();
+    }
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!user?._id || !socket) return;
+    const onMsg = (message) => {
+      const senderId = typeof message.senderId === "object" ? message.senderId?._id : message.senderId;
+      const receiverId = typeof message.receiverId === "object" ? message.receiverId?._id : message.receiverId;
+      if (!senderId || !receiverId) return;
+      const otherId = senderId === user._id ? receiverId : senderId;
+      const hasText = message.text || "";
+      updateFriendLastMessage(otherId, {
+        _id: message._id,
+        text: hasText || (message.fileType === "image" ? "📷 Image" : message.fileType === "audio" ? "🎵 Audio" : "📎 File"),
+        createdAt: message.createdAt,
+        status: message.status,
+        senderId: message.senderId,
+      });
+    };
+    socket.on("receive_message", onMsg);
+    return () => socket.off("receive_message", onMsg);
+  }, [user?._id, updateFriendLastMessage]);
 
   const sortedFriends = useMemo(() => {
     return [...friends].sort((a, b) => {
@@ -92,13 +118,12 @@ function ChatContent() {
         </div>
 
         <div className="mt-6 space-y-1">
-          {isLoading && <p className="py-10 text-center text-body-md text-outline">Loading...</p>}
+          {isLoading && friends.length === 0 && groups.length === 0 && <p className="py-10 text-center text-body-md text-outline">Loading...</p>}
 
           {!isLoading && friends.length === 0 && groups.length === 0 && (
             <p className="py-10 text-center text-body-md text-outline">No conversations yet. Start a new one!</p>
           )}
 
-          {/* Groups */}
           {filteredGroups.length > 0 && (
             <div>
               <p className="mb-2 text-label-sm uppercase tracking-wider text-outline-variant">Groups</p>
@@ -118,12 +143,11 @@ function ChatContent() {
             </div>
           )}
 
-          {/* Friends */}
           {filteredFriends.map((friend) => {
             const friendId = friend._id?.toString?.() || friend._id;
             const isOnline = presence[friendId]?.isOnline ?? false;
             const lastMessageTime = friend.lastMessage?.createdAt;
-            const isRecent = lastMessageTime && Date.now() - new Date(lastMessageTime).getTime() < 60000;
+            const isRecent = lastMessageTime && now - new Date(lastMessageTime).getTime() < 60000;
 
             return (
               <div key={friend._id} className="message-row flex cursor-pointer items-center gap-4 rounded-2xl p-3 transition-all hover:bg-surface-container-low" onClick={() => openChat(friend._id)}>
@@ -136,7 +160,9 @@ function ChatContent() {
                     <h3 className="truncate text-title-md font-semibold text-on-surface">{friend.name || friend.username}</h3>
                     {lastMessageTime && <span className={`ml-2 shrink-0 text-label-sm ${isRecent ? "text-primary" : "text-on-tertiary-container"}`}>{formatLastMessageTime(lastMessageTime)}</span>}
                   </div>
-                  <p className="truncate text-body-md text-on-surface-variant">{friend.bio || "No bio yet"}</p>
+                  <p className="truncate text-body-md text-on-surface-variant">
+                    {friend.lastMessage?.text || friend.bio || "No bio yet"}
+                  </p>
                 </div>
               </div>
             );

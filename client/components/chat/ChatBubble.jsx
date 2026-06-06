@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { formatMessageTime } from "@/lib/formatTime";
 import MessageTicks from "./MessageTicks";
 import MaterialIcon from "@/components/ui/MaterialIcon";
@@ -82,12 +82,16 @@ function FilePreview({ message, isMe }) {
   );
 }
 
-export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, onDelete, onStartEdit, editingText, setEditingText, onSaveEdit, onCancelEdit }) {
+function ChatBubble({ message, isMe, onReply, onReact, onEdit, onDelete, onStartEdit, editingText, setEditingText, onSaveEdit, onCancelEdit, onRetry }) {
   const [showMenu, setShowMenu] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const menuRef = useRef(null);
   const bubbleRef = useRef(null);
   const reactionRef = useRef(null);
+
+  const isFailed = message.status === "failed";
+  const isTemp = message._id?.toString()?.startsWith?.("temp_");
+  const isSending = isTemp && message.status !== "failed";
 
   useEffect(() => {
     function handleClick(e) {
@@ -102,7 +106,6 @@ export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, on
   const hasFile = !!message.fileUrl;
   const reactions = message.reactions || [];
 
-  // group reactions by emoji
   const grouped = {};
   reactions.forEach((r) => {
     const id = typeof r.userId === "object" ? r.userId?._id : r.userId;
@@ -115,11 +118,11 @@ export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, on
       <div className="relative">
         <div
           ref={bubbleRef}
-          onClick={() => { if (editingText?._id === message._id) return; setShowMenu(v => !v); }}
-          className={`inline-block w-fit max-w-full cursor-pointer rounded-2xl px-4 py-3 shadow-sm ${isMe
+          onClick={() => { if (editingText?._id === message._id || isTemp) return; setShowMenu(v => !v); }}
+          className={`inline-block w-fit max-w-full cursor-pointer rounded-2xl px-4 py-3 shadow-sm ${isFailed ? "ring-2 ring-error/50" : ""} ${isMe
             ? "message-bubble-outgoing bg-primary text-on-primary shadow-md"
             : "message-bubble-incoming bg-surface-container-high text-on-surface"
-          }`}
+          } ${isSending ? "opacity-80" : ""}`}
         >
           {message.replyTo?.text && (
             <div className="mb-2 max-w-full border-l-2 border-outline-variant/40 pl-3 opacity-90">
@@ -161,14 +164,28 @@ export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, on
 
               <div className="relative mt-1 flex items-center justify-end gap-1">
                 <span className={`text-[12px] leading-none ${isMe ? "text-on-primary/65" : "text-on-surface-variant"}`}>{timeLabel}</span>
-                {isMe && <MessageTicks status={message.status} />}
+                {isMe && !isFailed && <MessageTicks status={message.status} />}
+                {isFailed && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onRetry?.(message._id, message.text); }}
+                    className="flex items-center gap-1 rounded bg-error/20 px-1.5 py-0.5 text-[11px] font-semibold text-error transition-colors hover:bg-error/30"
+                  >
+                    <MaterialIcon name="error_outline" className="text-sm" /> Retry
+                  </button>
+                )}
+                {isSending && (
+                  <svg className="h-3 w-3 animate-spin text-on-primary/60" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                )}
               </div>
             </>
           )}
         </div>
 
-        {/* Context Menu */}
-        {showMenu && (
+        {showMenu && !isTemp && (
           <div ref={menuRef} onClick={(e) => e.stopPropagation()} className={`absolute z-50 w-44 overflow-hidden rounded-2xl border border-outline-variant/20 bg-surface-container-high py-1 shadow-2xl ${isMe ? "right-0" : "left-0"} top-full mt-2`}>
             <button type="button" onClick={() => { onReply?.(message); setShowMenu(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-body-md text-on-surface transition-colors hover:bg-surface-container">
               <MaterialIcon name="reply" className="text-outline text-lg" /> Reply
@@ -208,8 +225,7 @@ export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, on
         )}
       </div>
 
-      {/* Reactions below bubble */}
-      {Object.keys(grouped).length > 0 && !showMenu && (
+      {Object.keys(grouped).length > 0 && !showMenu && !isTemp && (
         <div className={`-mt-1 flex gap-1 flex-wrap ${isMe ? "justify-end" : "justify-start"} px-1`}>
           {Object.entries(grouped).map(([emoji, users]) => (
             <button key={emoji} type="button" onClick={() => onReact?.(message, emoji)} className="flex items-center gap-1 rounded-full bg-surface-container-low px-2 py-0.5 text-sm shadow-sm">
@@ -222,3 +238,5 @@ export default function ChatBubble({ message, isMe, onReply, onReact, onEdit, on
     </div>
   );
 }
+
+export default memo(ChatBubble);
