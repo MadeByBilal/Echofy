@@ -2,85 +2,18 @@ const User = require("../models/User.model");
 const bcrypt = require("bcryptjs");
 const generateToken = require("../utils/generateToken");
 
-const COUNTRIES = {
-  AF: { length: 10, startsWith: ["07"] },
-  DZ: { length: 10, startsWith: ["05", "06", "07"] },
-  AR: { length: 13, startsWith: ["15"] },
-  BD: { length: 11, startsWith: ["01"] },
-  BR: { length: 11, startsWith: [] },
-  CA: { length: 11, startsWith: ["1"] },
-  CN: { length: 11, startsWith: ["1"] },
-  CO: { length: 10, startsWith: ["3"] },
-  CD: { length: 10, startsWith: ["08", "09"] },
-  EG: { length: 11, startsWith: ["010", "011", "012", "015"] },
-  ET: { length: 10, startsWith: ["09", "07"] },
-  FR: { length: 10, startsWith: ["06", "07"] },
-  DE: { length: 11, startsWith: ["015", "016", "017"] },
-  IN: { length: 10, startsWith: ["6", "7", "8", "9"] },
-  ID: { length: 11, startsWith: ["08"] },
-  IR: { length: 11, startsWith: ["09"] },
-  IQ: { length: 11, startsWith: ["07"] },
-  IT: { length: 10, startsWith: ["3"] },
-  JP: { length: 11, startsWith: ["070", "080", "090"] },
-  KE: { length: 10, startsWith: ["07", "01"] },
-  MX: { length: 10, startsWith: [] },
-  MM: { length: 9, startsWith: ["09"] },
-  MA: { length: 10, startsWith: ["06", "07"] },
-  NG: { length: 11, startsWith: ["07", "08", "09"] },
-  PK: { length: 11, startsWith: ["03"] },
-  PH: { length: 11, startsWith: ["09"] },
-  PL: { length: 9, startsWith: [] },
-  RU: { length: 11, startsWith: ["8"] },
-  SA: { length: 10, startsWith: ["05"] },
-  ZA: { length: 10, startsWith: ["06", "07", "08"] },
-  KR: { length: 11, startsWith: ["010"] },
-  ES: { length: 9, startsWith: ["6", "7"] },
-  SD: { length: 10, startsWith: ["09", "01"] },
-  TZ: { length: 10, startsWith: ["06", "07"] },
-  TH: { length: 10, startsWith: ["06", "08", "09"] },
-  TR: { length: 11, startsWith: ["05"] },
-  UG: { length: 10, startsWith: ["07"] },
-  GB: { length: 11, startsWith: ["07"] },
-  US: { length: 11, startsWith: ["1"] },
-  VN: { length: 10, startsWith: ["03", "05", "07", "08", "09"] },
-};
-
-function validatePhoneByCountry(phone, countryCode) {
-  const country = COUNTRIES[countryCode];
-  if (!country) return "Invalid country code";
-
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length !== country.length) {
-    return `Phone must be ${country.length} digits for this country`;
-  }
-  if (country.startsWith.length > 0) {
-    const valid = country.startsWith.some((s) => digits.startsWith(s));
-    if (!valid) {
-      return `Phone must start with ${country.startsWith.join(", ")} for this country`;
-    }
-  }
-  return null;
-}
-
+// REGISTER
 const register = async (req, res) => {
   try {
-    const { username, password, phone, country } = req.body;
+    const { username, password, phone } = req.body;
 
     if (!username || !password || !phone) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const digitsOnly = phone.replace(/\D/g, "");
-
-    if (country) {
-      const validationError = validatePhoneByCountry(digitsOnly, country);
-      if (validationError) {
-        return res.status(400).json({ message: validationError });
-      }
-    } else {
-      if (digitsOnly.length < 5) {
-        return res.status(400).json({ message: "Phone number is invalid" });
-      }
+    if (digitsOnly.length < 11) {
+      return res.status(400).json({ message: "Phone number must be at least 11 digits" });
     }
 
     const existingUser = await User.findOne({ username });
@@ -93,15 +26,16 @@ const register = async (req, res) => {
     const user = await User.create({
       username,
       password: hashedPassword,
-      phone: digitsOnly,
-      country: country || "",
+      phone,
     });
 
+    // generate token
     const token = generateToken(user._id);
 
+    // send token in cookie
     const cookieOptions = {
       httpOnly: true,
-      maxAge: 365 * 24 * 60 * 60 * 1000,
+      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       secure: process.env.NODE_ENV === "production",
     };
@@ -115,7 +49,6 @@ const register = async (req, res) => {
         id: user._id,
         username: user.username,
         phone: user.phone,
-        country: user.country,
       },
     });
   } catch (error) {
@@ -123,23 +56,16 @@ const register = async (req, res) => {
   }
 };
 
+// LOGIN
 const login = async (req, res) => {
   try {
-    let { username, password, loginType } = req.body;
+    const { username, password } = req.body;
 
     if (!username || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    let user;
-
-    if (loginType === "phone") {
-      const digits = username.replace(/\D/g, "");
-      user = await User.findOne({ phone: digits });
-    } else {
-      user = await User.findOne({ username: username.toLowerCase().trim() });
-    }
-
+    const user = await User.findOne({ username });
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -149,6 +75,7 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    // generate token
     const token = generateToken(user._id);
 
     const cookieOptions = {
@@ -166,20 +93,19 @@ const login = async (req, res) => {
         id: user._id,
         username: user.username,
         phone: user.phone,
-        country: user.country,
       },
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
+// INFO OF THE CURRENT USER LOGIN
 const getMe = async (req, res) => {
   res.status(200).json({
-    user: req.user,
+    user: req.user, // this came from the middleware
   });
 };
-
+// LOGOUT THE USER
 const logout = async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,

@@ -1,10 +1,10 @@
+// app/auth/register/page.jsx
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import useAuthStore from "@/store/authStore";
-import { countries, validatePhone, getFlag, getCountryByCode } from "@/lib/countries";
 import "./register.css";
 
 const testimonials = [
@@ -28,81 +28,6 @@ const testimonials = [
   },
 ];
 
-function CountrySelector({ selected, onSelect }) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const ref = useRef(null);
-
-  useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    if (!q) return countries;
-    return countries.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.code.toLowerCase().includes(q) ||
-        c.prefix.includes(q),
-    );
-  }, [search]);
-
-  return (
-    <div ref={ref} className="country-selector-wrapper">
-      <button
-        type="button"
-        className="country-selector-trigger"
-        onClick={() => setOpen(!open)}
-      >
-        <span className="country-flag">{getFlag(selected.code)}</span>
-        <span className="country-code">+{selected.prefix}</span>
-        <svg className={`chevron ${open ? "open" : ""}`} width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M3 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-      {open && (
-        <div className="country-dropdown">
-          <div className="country-search-wrapper">
-            <svg className="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              className="country-search-input"
-              placeholder="Search country..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              autoFocus
-            />
-          </div>
-          <div className="country-list">
-            {filtered.map((c) => (
-              <button
-                key={c.code}
-                type="button"
-                className={`country-option ${c.code === selected.code ? "active" : ""}`}
-                onClick={() => { onSelect(c); setOpen(false); setSearch(""); }}
-              >
-                <span className="country-flag">{getFlag(c.code)}</span>
-                <span className="country-name">{c.name}</span>
-                <span className="country-dial-code">+{c.prefix}</span>
-              </button>
-            ))}
-            {filtered.length === 0 && (
-              <p className="no-results">No countries found</p>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function RegisterPage() {
   const { register, isLoading, isAuthReady, user } = useAuthStore();
 
@@ -111,7 +36,6 @@ export default function RegisterPage() {
     phone: "",
     password: "",
   });
-  const [selectedCountry, setSelectedCountry] = useState(getCountryByCode("PK"));
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -124,19 +48,14 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
-    const digits = formData.phone.replace(/\D/g, "");
-    const validationError = validatePhone(digits, selectedCountry);
-    if (validationError) {
-      setError(validationError);
+    const digitsOnly = formData.phone.replace(/\D/g, "");
+    if (digitsOnly.length < 11) {
+      setError("Phone number must be at least 11 digits");
       return;
     }
 
     try {
-      await register({
-        ...formData,
-        phone: digits,
-        country: selectedCountry.code,
-      });
+      await register(formData);
       window.location.href = "/setup";
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
@@ -165,6 +84,7 @@ export default function RegisterPage() {
 
   return (
     <div className="register-container">
+      {/* Left side – Form */}
       <section className="register-left">
         <div className="register-left-inner">
           <h1 className="register-title animate-element animate-delay-100">
@@ -199,33 +119,20 @@ export default function RegisterPage() {
             </div>
 
             <div className="form-field animate-element animate-delay-400">
-              <label className="form-label">Phone Number</label>
-              <div className="glass-input-wrapper phone-input-wrapper">
-                <CountrySelector
-                  selected={selectedCountry}
-                  onSelect={setSelectedCountry}
-                />
+              <label className="form-label" htmlFor="phone">
+                Phone Number
+              </label>
+              <div className="glass-input-wrapper">
                 <input
                   id="phone"
                   name="phone"
                   type="tel"
-                  placeholder="Enter phone number"
+                  placeholder="Enter your phone number"
                   value={formData.phone}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "");
-                    setFormData((prev) => ({ ...prev, phone: val }));
-                  }}
-                  maxLength={selectedCountry.length}
+                  onChange={handleChange}
                   required
                 />
               </div>
-              {selectedCountry && (
-                <p className="phone-hint">
-                  +{selectedCountry.prefix} · {selectedCountry.length} digits
-                  {selectedCountry.startsWith.length > 0 &&
-                    ` · starts with ${selectedCountry.startsWith.join(", ")}`}
-                </p>
-              )}
             </div>
 
             <div className="form-field animate-element animate-delay-500">
@@ -249,14 +156,30 @@ export default function RegisterPage() {
                   aria-label="Toggle password visibility"
                 >
                   {showPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
                       <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
                       <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
                       <path d="m2 2 20 20" />
                     </svg>
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
@@ -285,11 +208,28 @@ export default function RegisterPage() {
             className="btn-outline animate-element animate-delay-800"
             onClick={handleGoogleSignIn}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
-              <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s12-5.373 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-2.641-.21-5.236-.611-7.743z" />
-              <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z" />
-              <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
-              <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.022 35.026 44 30.038 44 24c0-2.641-.21-5.236-.611-7.743z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 48 48"
+              width="20"
+              height="20"
+            >
+              <path
+                fill="#FFC107"
+                d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s12-5.373 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-2.641-.21-5.236-.611-7.743z"
+              />
+              <path
+                fill="#FF3D00"
+                d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"
+              />
+              <path
+                fill="#4CAF50"
+                d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"
+              />
+              <path
+                fill="#1976D2"
+                d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.022 35.026 44 30.038 44 24c0-2.641-.21-5.236-.611-7.743z"
+              />
             </svg>
             Continue with Google
           </button>
@@ -303,6 +243,7 @@ export default function RegisterPage() {
         </div>
       </section>
 
+      {/* Right side – Hero + testimonials */}
       <section className="register-right">
         <div
           className="hero-image animate-slide-right animate-delay-300"
@@ -322,7 +263,7 @@ export default function RegisterPage() {
               return (
                 <div
                   key={index}
-                  className={`${cardClass} ${delayClass} animate-testimonial`}
+                  className={`${cardClass} animate-testimonial ${delayClass}`}
                 >
                   <Image
                     className="testimonial-avatar"

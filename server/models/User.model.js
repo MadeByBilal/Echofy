@@ -30,10 +30,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    country: {
-      type: String,
-      default: "",
-    },
     isOnline: {
       type: Boolean,
       default: false,
