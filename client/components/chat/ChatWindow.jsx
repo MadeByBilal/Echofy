@@ -41,7 +41,12 @@ export default function ChatWindow({
   const chatBgClass = BACKGROUNDS[chatBgKey]?.bg || "";
   const customBgStyle = useChatBackgroundStore((s) => s.getCustomBgStyle)();
   const customColor = useChatBackgroundStore((s) => s.customColor);
-  const finalBgStyle = chatBgKey === "custom" && customColor ? customBgStyle : undefined;
+  const isWhatsappBg = chatBgKey === "whatsapp";
+  const finalBgStyle = isWhatsappBg
+    ? { backgroundImage: "url(/whatappbackground.png)", backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "repeat" }
+    : chatBgKey === "custom" && customColor
+      ? customBgStyle
+      : undefined;
 
   const statusLabel = isTyping ? "typing..." : isFriendOnline ? "Online" : lastSeen ? formatLastSeen(lastSeen) : "Offline";
   const statusColor = isTyping ? "text-primary" : "text-outline";
